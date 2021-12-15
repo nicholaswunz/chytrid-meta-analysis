@@ -1,7 +1,7 @@
 # Infection intensity predicts functional disruption
 This repository contains code and data needed to reproduce the article:
 
-**Wu N. C.** Functional disruption varies with infection intensity in an amphibian fungal panzootic (In prep) *Functional Ecology*,
+**Wu N. C.** (In prep) Functional disruption varies with infection intensity in an amphibian fungal panzootic. *Functional Ecology*,
 
 **Raw data**
 - trait_raw_data.csv - Raw data for at the individual level used for the analysis.
