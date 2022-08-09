@@ -1,17 +1,14 @@
 # Infection intensity predicts functional disruption
 This repository contains code and data needed to reproduce the article:
 
-**Wu N. C.** (In prep) Functional disruption varies with infection intensity in an amphibian fungal panzootic. *Functional Ecology*,
+**Wu N. C.** (In review) Pathogen load predicts host functional disruption: A meta-analysis of an amphibian fungal panzootic. *Functional Ecology*,
 
 **Raw data**
 - trait_raw_data.csv - Raw data for at the individual level used for the analysis.
 - trait_corr_data.csv - Correlation data used for the analysis.
 
-**R code**
-- chytrid_analysis.R - Data cleaning, meta-analysis and figure production.
-
-**Extra files**
-- xxx.PDF - Supplementary file includes statistical outcomes, additional figures, and descriptions from the main document.
+**Analysis workflow**
+- supplementary_information.html - Supplementary information which contains the *R* workflow for processing and analysing the raw data, creating figures, and supplementary material for statistical outcomes, additional figures, and descriptions from the main document.
 
 ## Abstract
 1. The development of infectious disease depends on the intensity of pathogen infection. However, the sensitivity of a host’s phenotype or functional trait related to the fitness such as behaviour, physiology, and reproduction may differ to infection intensity. Determining commonalities in trait sensitivity to pathogen infection across species can provide insight to the pathogenesis of emerging infectious diseases.  
@@ -20,4 +17,4 @@ This repository contains code and data needed to reproduce the article:
 4. This study suggests quantifying pathogen load can predict functional disruption for susceptible species and may help inform pathogen thresholds before the onset of irreversible damage and mortality. Hence, infection intensity mediates functional disruption in amphibians, but study bias currently limits generalised implications.  
 
 
-**Keywords:** *Batrachochytrium dendrobatidis*, chytridiomycosis, meta-analysis, pathogen, emerging infectious diseases, anuran
+**Keywords:** anuran, *Batrachochytrium dendrobatidis*, chytridiomycosis, emerging infectious diseases, meta-analysis, pathogen
