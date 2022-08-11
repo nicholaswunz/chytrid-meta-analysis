@@ -1,0 +1,473 @@
+﻿TY  - JOUR
+AU  - Berger, Lee
+AU  - Marantelli, Gerry
+AU  - Skerratt, Lee F
+AU  - Speare, Rick
+PY  - 2005
+SN  - 1616-1580
+SP  - 47-50
+ST  - Virulence of the amphibian chytrid fungus Batrachochytrium dendrobatidis varies with the strain
+T2  - Diseases of Aquatic Organisms
+TI  - Virulence of the amphibian chytrid fungus Batrachochytrium dendrobatidis varies with the strain
+VL  - 68
+ID  - 362
+ER  - 
+
+TY  - JOUR
+AU  - Berger, Lee
+AU  - Speare, Rick
+AU  - Daszak, Peter
+AU  - Green, D Earl
+AU  - Cunningham, Andrew A
+AU  - Goggin, C Louise
+AU  - Slocombe, Ron
+AU  - Ragan, Mark A
+AU  - Hyatt, Alex D
+AU  - McDonald, Keith R
+IS  - 15
+PY  - 1998
+SN  - 0027-8424
+SP  - 9031-9036
+ST  - Chytridiomycosis causes amphibian mortality associated with population declines in the rain forests of Australia and Central America
+T2  - Proceedings of the National Academy of Sciences
+TI  - Chytridiomycosis causes amphibian mortality associated with population declines in the rain forests of Australia and Central America
+VL  - 95
+ID  - 321
+ER  - 
+
+TY  - JOUR
+AU  - Berger, Lee
+AU  - Speare, Rick
+AU  - Kent, Andrew
+PY  - 1999
+SP  - 184-190
+ST  - Diagnosis of chytridiomycosis in amphibians by histologic examination
+T2  - Zoos Print J
+TI  - Diagnosis of chytridiomycosis in amphibians by histologic examination
+VL  - 15
+ID  - 2190
+ER  - 
+
+TY  - JOUR
+AU  - Berger, Lee
+AU  - Speare, Rick
+AU  - Skerratt, Lee F
+PY  - 2005
+SN  - 1616-1580
+SP  - 65-70
+ST  - Distribution of Batrachochytrium dendrobatidis and pathology in the skin of green tree frogs Litoria caerulea with severe chytridiomycosis
+T2  - Diseases of Aquatic Organisms
+TI  - Distribution of Batrachochytrium dendrobatidis and pathology in the skin of green tree frogs Litoria caerulea with severe chytridiomycosis
+VL  - 68
+ID  - 349
+ER  - 
+
+TY  - JOUR
+AU  - Bovo, Rafael P
+AU  - Andrade, Denis V
+AU  - Toledo, Luís Felipe
+AU  - Longo, Ana V
+AU  - Rodriguez, David
+AU  - Haddad, Célio FB
+AU  - Zamudio, Kelly R
+AU  - Becker, C Guilherme
+IS  - 3
+PY  - 2016
+SN  - 0177-5103
+SP  - 245-252
+ST  - Physiological responses of Brazilian amphibians to an enzootic infection of the chytrid fungus Batrachochytrium dendrobatidis
+T2  - Diseases of aquatic organisms
+TI  - Physiological responses of Brazilian amphibians to an enzootic infection of the chytrid fungus Batrachochytrium dendrobatidis
+VL  - 117
+ID  - 2084
+ER  - 
+
+TY  - JOUR
+AU  - Brannelly, Laura A
+AU  - Roberts, Alexandra A
+AU  - Skerratt, Lee F
+AU  - Berger, Lee
+PY  - 2017
+SN  - 2167-8359
+SP  - e2925
+ST  - Epidermal cell death in frogs with chytridiomycosis
+T2  - PeerJ
+TI  - Epidermal cell death in frogs with chytridiomycosis
+VL  - 5
+ID  - 2051
+ER  - 
+
+TY  - JOUR
+AU  - Campbell, Craig R
+AU  - Voyles, Jamie
+AU  - Cook, David I
+AU  - Dinudom, Anuwat
+IS  - 3
+KW  - chytrid
+PY  - 2012
+SN  - 1357-2725
+SP  - 431-434
+ST  - Frog skin epithelium: Electrolyte transport and chytridiomycosis
+T2  - International Journal of Biochemistry & Cell Biology
+TI  - Frog skin epithelium: Electrolyte transport and chytridiomycosis
+VL  - 44
+ID  - 288
+ER  - 
+
+TY  - JOUR
+AU  - Davidson, Elizabeth W
+AU  - Parris, Matthew
+AU  - Collins, James P
+AU  - Longcore, Joyce E
+AU  - Pessier, Allan P
+AU  - Brunner, Jesse
+PY  - 2003
+SP  - 601-607
+ST  - Pathogenicity and transmission of chytridiomycosis in tiger salamanders (Ambystoma tigrinum)
+T2  - Copeia
+TI  - Pathogenicity and transmission of chytridiomycosis in tiger salamanders (Ambystoma tigrinum)
+VL  - 200
+ID  - 845
+ER  - 
+
+TY  - JOUR
+AU  - Ellison, Amy R
+AU  - Tunstall, Tate
+AU  - DiRenzo, Graziella V
+AU  - Hughey, Myra C
+AU  - Rebollar, Eria A
+AU  - Belden, Lisa K
+AU  - Harris, Reid N
+AU  - Ibáñez, Roberto
+AU  - Lips, Karen R
+AU  - Zamudio, Kelly R
+IS  - 1
+PY  - 2015
+SN  - 1759-6653
+SP  - 286-298
+ST  - More than skin deep: functional genomic basis for resistance to amphibian chytridiomycosis
+T2  - Genome biology and evolution
+TI  - More than skin deep: functional genomic basis for resistance to amphibian chytridiomycosis
+VL  - 7
+ID  - 1969
+ER  - 
+
+TY  - JOUR
+AU  - Fites, J Scott
+AU  - Reinert, Laura K
+AU  - Chappell, Timothy M
+AU  - Rollins-Smith, Louise A
+PY  - 2014
+SN  - 0019-9567
+SP  - IAI. 02231-14
+ST  - Inhibition of local immune responses by the frog-killing fungus, Batrachochytrium dendrobatidis
+T2  - Infection and Immunity
+TI  - Inhibition of local immune responses by the frog-killing fungus, Batrachochytrium dendrobatidis
+ID  - 551
+ER  - 
+
+TY  - JOUR
+AU  - Gauberg, Julia
+AU  - Wu, Nicholas C
+AU  - Cramp, Rebecca L
+AU  - Kelly, Scott P
+AU  - Franklin, Craig E
+IS  - 3
+PY  - 2019
+SN  - 0022-0949
+SP  - jeb192245
+ST  - A lethal fungal pathogen directly alters tight junction proteins in the skin of a susceptible amphibian
+T2  - Journal of Experimental Biology
+TI  - A lethal fungal pathogen directly alters tight junction proteins in the skin of a susceptible amphibian
+VL  - 222
+ID  - 2638
+ER  - 
+
+TY  - JOUR
+AU  - Grogan, Laura Frances
+AU  - Robert, Jacques
+AU  - Berger, Lee
+AU  - Skerratt, Lee F
+AU  - Scheele, Benjamin C
+AU  - Castley, James Guy
+AU  - Newell, David A
+AU  - McCallum, Hamish I
+PY  - 2018
+SN  - 1664-3224
+SP  - 2536
+ST  - Review of the amphibian immune response to chytridiomycosis, and future directions
+T2  - Frontiers in immunology
+TI  - Review of the amphibian immune response to chytridiomycosis, and future directions
+VL  - 9
+ID  - 4822
+ER  - 
+
+TY  - JOUR
+AU  - Kindermann, Christina
+AU  - Narayan, Edward J
+AU  - Hero, Jean-Marc
+PY  - 2017
+SN  - 1095-6433
+SP  - 220-226
+ST  - Does physiological response to disease incur cost to reproductive ecology in a sexually dichromatic amphibian species?
+T2  - Comparative Biochemistry and Physiology Part A: Molecular & Integrative Physiology
+TI  - Does physiological response to disease incur cost to reproductive ecology in a sexually dichromatic amphibian species?
+VL  - 203
+ID  - 6588
+ER  - 
+
+TY  - JOUR
+AU  - Ohmer, Michel E
+AU  - Cramp, Rebecca L
+AU  - Russo, Catherine J M
+AU  - White, C.R.
+AU  - Franklin, Craig E
+IS  - 3592
+PY  - 2017
+SP  - 1-10
+ST  - Skin sloughing in susceptible and resistant amphibians regulates infection with a fungal pathogen 
+T2  - Scientific reports
+TI  - Skin sloughing in susceptible and resistant amphibians regulates infection with a fungal pathogen 
+VL  - 7
+ID  - 2065
+ER  - 
+
+TY  - JOUR
+AU  - Parker, John M
+AU  - Mikaelian, Igor
+AU  - Hahn, Nina
+AU  - Diggs, Helen E
+IS  - 3
+PY  - 2002
+SN  - 1532-0820
+SP  - 265-268
+ST  - Clinical diagnosis and treatment of epidermal chytridiomycosis in African clawed frogs (Xenopus tropicalis)
+T2  - Comparative Medicine
+TI  - Clinical diagnosis and treatment of epidermal chytridiomycosis in African clawed frogs (Xenopus tropicalis)
+VL  - 52
+ID  - 384
+ER  - 
+
+TY  - JOUR
+AU  - Peterson, John D
+AU  - Steffen, John E
+AU  - Reinert, Laura K
+AU  - Cobine, Paul A
+AU  - Appel, Arthur
+AU  - Rollins-Smith, Louise
+AU  - Mendonça, Mary T
+IS  - 4
+PY  - 2013
+SN  - 1932-6203
+SP  - e62146
+ST  - Host stress response is important for the pathogenesis of the deadly amphibian disease, chytridiomycosis, in Litoria caerulea
+T2  - PLoS ONE
+TI  - Host stress response is important for the pathogenesis of the deadly amphibian disease, chytridiomycosis, in Litoria caerulea
+VL  - 8
+ID  - 536
+ER  - 
+
+TY  - JOUR
+AU  - Ribas, Laia
+AU  - Li, Ming-Shi
+AU  - Doddington, Benjamin J
+AU  - Robert, Jacques
+AU  - Seidel, Judith A
+AU  - Kroll, J Simon
+AU  - Zimmerman, Lyle B
+AU  - Grassly, Nicholas C
+AU  - Garner, Trenton WJ
+AU  - Fisher, Matthew C
+IS  - 12
+PY  - 2009
+SN  - 1932-6203
+SP  - e8408
+ST  - Expression profiling the temperature-dependent amphibian response to infection by Batrachochytrium dendrobatidis
+T2  - PLoS ONE
+TI  - Expression profiling the temperature-dependent amphibian response to infection by Batrachochytrium dendrobatidis
+VL  - 4
+ID  - 350
+ER  - 
+
+TY  - JOUR
+AU  - Richards-Zawacki, Corinne L
+PY  - 2009
+SN  - 0962-8452
+SP  - rspb20091656
+ST  - Thermoregulatory behaviour affects prevalence of chytrid fungal infection in a wild population of Panamanian golden frogs
+T2  - Proceedings of the Royal Society of London B: Biological Sciences
+TI  - Thermoregulatory behaviour affects prevalence of chytrid fungal infection in a wild population of Panamanian golden frogs
+ID  - 1926
+ER  - 
+
+TY  - JOUR
+AU  - Rosenblum, Erica Bree
+AU  - Poorten, Thomas J
+AU  - Settles, Matthew
+AU  - Murdoch, Gordon K
+IS  - 13
+PY  - 2012
+SN  - 1365-294X
+SP  - 3110-3120
+ST  - Only skin deep: shared genetic response to the deadly chytrid fungus in susceptible frog species
+T2  - Molecular Ecology
+TI  - Only skin deep: shared genetic response to the deadly chytrid fungus in susceptible frog species
+VL  - 21
+ID  - 2182
+ER  - 
+
+TY  - JOUR
+AU  - Russo, Catherine J M
+AU  - Ohmer, Michel E
+AU  - Cramp, Rebecca L
+AU  - Franklin, Craig E
+PY  - In review
+ST  - High water loss rates in frogs infected with a pathogenic skin fungus
+T2  - Journal of Experimental Biology
+TI  - High water loss rates in frogs infected with a pathogenic skin fungus
+ID  - 2002
+ER  - 
+
+TY  - JOUR
+AU  - Savage, Anna E
+AU  - Terrell, Kimberly A
+AU  - Gratwicke, Brian
+AU  - Mattheus, Nichole M
+AU  - Augustine, Lauren
+AU  - Fleischer, Robert C
+IS  - 1
+PY  - 2016
+SN  - 2051-1434
+SP  - cow011
+ST  - Reduced immune function predicts disease susceptibility in frogs infected with a deadly fungal pathogen
+T2  - Conservation Physiology
+TI  - Reduced immune function predicts disease susceptibility in frogs infected with a deadly fungal pathogen
+VL  - 4
+ID  - 2046
+ER  - 
+
+TY  - JOUR
+AU  - Voyles, Jamie
+AU  - Berger, Lee
+AU  - Young, Sam
+AU  - Speare, Rick
+AU  - Webb, Rebecca
+AU  - Warner, Jeffrey
+AU  - Rudd, Donna
+AU  - Campbell, Ruth
+AU  - Skerratt, Lee F
+PY  - 2007
+SN  - 1616-1580
+SP  - 113-118
+ST  - Electrolyte depletion and osmotic imbalance in amphibians with chytridiomycosis
+T2  - Diseases of Aquatic Organisms
+TI  - Electrolyte depletion and osmotic imbalance in amphibians with chytridiomycosis
+VL  - 77
+ID  - 285
+ER  - 
+
+TY  - JOUR
+AU  - Voyles, Jamie
+AU  - Vredenburg, Vance T
+AU  - Tunstall, Tate S
+AU  - Parker, John M
+AU  - Briggs, Cheryl J
+AU  - Rosenblum, Erica Bree
+IS  - 4
+PY  - 2012
+SN  - 1932-6203
+SP  - e35374
+ST  - Pathophysiology in mountain yellow-legged frogs (Rana muscosa) during a chytridiomycosis outbreak
+T2  - PLoS ONE
+TI  - Pathophysiology in mountain yellow-legged frogs (Rana muscosa) during a chytridiomycosis outbreak
+VL  - 7
+ID  - 287
+ER  - 
+
+TY  - JOUR
+AU  - Voyles, Jamie
+AU  - Young, Sam
+AU  - Berger, Lee
+AU  - Campbell, Craig
+AU  - Voyles, Wyatt F
+AU  - Dinudom, Anuwat
+AU  - Cook, David
+AU  - Webb, Rebecca
+AU  - Alford, Ross A
+AU  - Skerratt, Lee F
+IS  - 5952
+PY  - 2009
+SN  - 0036-8075
+SP  - 582-585
+ST  - Pathogenesis of chytridiomycosis, a cause of catastrophic amphibian declines
+T2  - Science
+TI  - Pathogenesis of chytridiomycosis, a cause of catastrophic amphibian declines
+VL  - 326
+ID  - 284
+ER  - 
+
+TY  - JOUR
+AU  - Wu, Nicholas C
+AU  - Cramp, Rebecca L
+AU  - Franklin, Craig E 
+IS  - 1
+PY  - 2018
+SN  - 2045-2322
+SP  - 3739
+ST  - Body size influences energetic and osmoregulatory costs in frogs infected with Batrachochytrium dendrobatidis
+T2  - Scientific Reports
+TI  - Body size influences energetic and osmoregulatory costs in frogs infected with Batrachochytrium dendrobatidis
+VL  - 8
+ID  - 2634
+ER  - 
+
+TY  - JOUR
+AU  - Wu, Nicholas C
+AU  - Cramp, Rebecca L
+AU  - Ohmer, Michel EB
+AU  - Franklin, Craig E 
+IS  - 2
+PY  - 2019
+SN  - 0022-0949
+SP  - jeb191817
+ST  - Epidermal epidemic: unravelling the pathogenesis of chytridiomycosis
+T2  - Journal of Experimental Biology
+TI  - Epidermal epidemic: unravelling the pathogenesis of chytridiomycosis
+VL  - 222
+ID  - 2635
+ER  - 
+
+TY  - JOUR
+AU  - Wu, Nicholas C
+AU  - McKercher, Callum
+AU  - Cramp, Rebecca L
+AU  - Franklin, Craig E
+PY  - 2019
+SN  - 0363-6119
+SP  - R301-R311
+ST  - Mechanistic basis for the loss of water balance in green tree frogs infected with a fungal pathogen
+T2  - American Journal of Physiology - Regulatory Integrative and Comparative Physiology
+TI  - Mechanistic basis for the loss of water balance in green tree frogs infected with a fungal pathogen
+VL  - 317
+ID  - 2637
+ER  - 
+
+TY  - JOUR
+AU  - Young, Sam
+AU  - Whitehorn, Paul
+AU  - Berger, Lee
+AU  - Skerratt, Lee F
+AU  - Speare, Rick
+AU  - Garland, Stephen
+AU  - Webb, Rebecca
+IS  - 9
+PY  - 2014
+SN  - 1932-6203
+SP  - e107284
+ST  - Defects in host immune function in tree frogs with chronic chytridiomycosis
+T2  - PLoS ONE
+TI  - Defects in host immune function in tree frogs with chronic chytridiomycosis
+VL  - 9
+ID  - 2028
+ER  - 
+
