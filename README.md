@@ -10,7 +10,7 @@ This repository contains code and data needed to reproduce the article:
 **Analysis workflow**
 - supplementary_information.html - Supplementary information which contains the *R* workflow for processing and analysing the raw data, creating figures, and supplementary material for statistical outcomes, additional figures, and descriptions from the main document.
 
-**Raw data**
+**Files**
 - Wu_table_ref.txt - Text file containing citation information from Table S1 in [Wu (2019)](https://espace.library.uq.edu.au/view/UQ:39c96d7).
 - naive_search_WoS_211028.txt - Text file containing citation information from the näive Boolean search in [Web of Science](https://www.webofscience.com/wos/woscc/basic-search).
 
