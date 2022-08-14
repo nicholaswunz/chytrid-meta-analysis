@@ -1,4 +1,8 @@
 # Infection intensity predicts functional disruption
+[![license](https://img.shields.io/badge/license-MIT%20+%20file%20LICENSE-lightgrey.svg)](https://choosealicense.com/)
+![Open Source
+Love](https://badges.frapsoft.com/os/v2/open-source.svg?v=103)
+
 This repository contains code and data needed to reproduce the article:
 
 **Wu N. C.** (In review) Pathogen load predicts host functional disruption: A meta-analysis of an amphibian fungal panzootic. *Functional Ecology*,
@@ -21,3 +25,6 @@ This repository contains code and data needed to reproduce the article:
 4. The influence of pathogen load on functional disruption can help inform pathogen thresholds before the onset of irreversible damage and mortality. Meta-analytic approaches can provide quantitative assessment across studies to reveal commonalities, differences, and biases of panzootic diseases, especially for understanding the ecological relevance of disease impact.  
 
 **Keywords:** anuran, *Batrachochytrium dendrobatidis*, chytridiomycosis, emerging infectious diseases, meta-analysis, pathogen
+
+## License
+This repository is provided by the authors under the MIT License ([MIT](http://opensource.org/licenses/MIT)).
