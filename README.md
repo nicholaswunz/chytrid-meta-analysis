@@ -5,7 +5,7 @@ Love](https://badges.frapsoft.com/os/v2/open-source.svg?v=103)
 
 This repository contains code and data needed to reproduce the article:
 
-**Wu N. C.** (In review) Pathogen load predicts host functional disruption: A meta-analysis of an amphibian fungal panzootic. *Functional Ecology*,
+**Wu N. C.** (Accepted) Pathogen load predicts host functional disruption: A meta-analysis of an amphibian fungal panzootic. *Functional Ecology*,
 
 **Raw data**
 - trait_raw_data.csv - Raw data for at the individual level used for the analysis.
