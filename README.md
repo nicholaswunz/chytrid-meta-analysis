@@ -7,6 +7,10 @@ This repository contains code and data needed to reproduce the article:
 
 **Wu N. C.** (Accepted) Pathogen load predicts host functional disruption: A meta-analysis of an amphibian fungal panzootic. *Functional Ecology*,
 
+**When using the data or code from this project, please cite it as:**
+
+**Wu N. C.** (2022) nicholaswunz/chytrid-meta-analysis: Accepted version of paper data and code of manuscript: Pathogen load predicts host functional disruption: A meta-analysis of an amphibian fungal panzootic (Functional Ecology). *Zenodo*. DOI: [![DOI](https://zenodo.org/badge/437831315.svg)](https://zenodo.org/badge/latestdoi/437831315)
+
 **Raw data**
 - trait_raw_data.csv - Raw data for at the individual level used for the analysis.
 - trait_corr_data.csv - Correlation data used for the analysis.
