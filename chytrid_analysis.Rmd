@@ -1,0 +1,1364 @@
+---
+title: "Pathogen load predicts host functional disruption: A meta-analysis of an amphibian fungal panzootic"
+subtitle: "Supplementary Information"
+date: "`r format(Sys.Date(), '%d/%m/%Y')`"
+author:
+  - Nicholas C. Wu^[Hawkesbury Institute for the Environment, Western Sydney University, NSW 2753, Australia, nicholas.wu.nz@gmail.com]
+output:
+  bookdown::html_document2:
+    code_download: yes
+    code_folding: hide
+    toc: yes
+    toc_float: yes
+    highlight: tango
+editor_options:
+  chunk_output_type: console
+csl: ./bib/the-journal-of-experimental-biology.csl
+bibliography: ./bib/chytrid_ref.bib
+link-citations: true
+---
+
+[GitHub Repository](https://github.com/nicholaswunz/chytrid-meta-analysis)  
+The Rmarkdown file can be downloaded from the *Code* drop down menu (top right).
+
+This supplementary file contains the *R* workflow for processing and analysing the raw data, and creating figures for the manuscript ID: FE-2022-00608 titled "**Pathogen load predicts host functional disruption: A meta-analysis of an amphibian fungal panzootic**".
+
+```{r setup, include=FALSE}
+library(knitr)
+knitr::opts_chunk$set(echo = TRUE, cache = FALSE, tidy = TRUE, message = FALSE, warning = FALSE)
+options(dplyr.width = Inf, knitr.kable.NA = "", digits = 2)
+
+# Load library
+pacman::p_load(Matrix, tidyverse, forcats, colorspace, cowplot, brms, rstan, bayestestR, performance, ggeffects, rotl, ape, phytools, ggtree, ggnewscale, litsearchr, ggraph, pander)
+
+# Functions
+mytheme <- function() {
+  theme_bw() +
+    theme(panel.border          = element_rect(fill = NA, colour = "black"), # set border around plot.
+          panel.grid.major      = element_blank(), # remove major grid lines
+          panel.grid.minor      = element_blank(), # remove minor grid lines
+          axis.line             = element_blank(), # remove axis lines
+          axis.ticks            = element_line(colour = "black"),
+          axis.text             = element_text(size = 10, colour = "black"), # axis text size
+          axis.title            = element_text(size = 10), # axis title size
+          axis.title.y          = element_text(vjust = 3), # increase distance from the y-axis
+          axis.title.x          = element_text(vjust = -1), # increase distance from the x-axis
+          panel.background      = element_rect(fill = NA),
+          plot.background       = element_rect(fill = NA, color = NA), # remove background colour
+          plot.margin           = unit(c(0.2, 0.2, 0.2, 0.2), units = , "cm"),
+          legend.background     = element_rect(fill = NA, color = NA), # get rid of legend bg
+          legend.box.background = element_rect(fill = NA, color = NA), # get rid of legend panel bg
+          strip.text.x          = element_text(size = 10, color = "black", face = "bold"), # for facet plots
+          strip.background      = element_rect(fill = NA, color = NA)
+    )
+} # set up plot theme
+
+format_cells <- function(df, rows ,cols, value = c("italics", "bold", "strikethrough")){
+  # select the correct markup
+  # one * for italics, two ** for bold
+  map <- setNames(c("*", "**", "~~"), c("italics", "bold", "strikethrough"))
+  markup <- map[value]  
+  for (r in rows){
+    for(c in cols){
+      # Make sure values are not factors
+      df[[c]] <- as.character(df[[c]])
+      # Update formatting
+      df[r, c] <- paste0(markup, df[r, c], markup)
+    }
+  }
+  return(df)
+} # Allows to select the cell row and columns which need to be reformatted and select the styling to apply.
+
+addparentheses <- function(x){paste("(", x, ")")} # add parentheses between words
+addbracket     <- function(x){paste("[", x, "]")} # add brackets between words
+
+# Set options in Rstan
+set.seed(10)
+rstan_options(auto_write = TRUE) # translate to STAN platform for running Bayesian model
+options(mc.cores = parallel::detectCores()) # detects how many cores available to use
+```
+
+***
+
+# Supplementary methods {-}
+
+## Chytridiomycosis disease description {-}
+
+Both chytrid fungus species (*Batrachochytrium dendrobatidis*, *Bd*, and *Batrachochytrium salamandrivorans*, *Bs*) colonies the host skin via free-swimming motile zoospores and complete their life cycle within the epidermal layer of the skin [@Berger2005; @Martel2013]. The chytrid fungus affects the host’s skin function through both the physical breakdown and chemical disruption of the epidermis [@Voyles2009; @Brutyn2012; @Wu2019]. Because amphibians rely heavily on their skin for maintaining physiological homeostasis such as electrolyte and fluid balance, and respiration [@Hillyard2008], the resulting cutaneous disruption directly affects the host’s behaviour and physiology [@Voyles2007; @Campbell2012; @Peterson2013; @VanRooij2015; @Kindermann2017]. The cause of death is proposed to be cardiac arrest due to low circulating ion levels [@Voyles2009]. The presence of the chytrid fungus also elicits a range of immunological responses [@RollinsSmith2011; @Grogan2018a; @RollinsSmith2021] which in turn alters the host’s energy metabolism, behaviour, activity and movement patterns, and body condition [@RichardsZawacki2010; @Grogan2018b; @Wu2018].
+
+## Abstract inclusion and data exclusion criteria {-}
+
+Title and abstract screening of 1,038 records after duplicates were removed was conducted in Rayyan [@Ouzzani2016], where the abstracts were screened for whether the study performed experimental infections, whether anurans were tested, and whether a functional trait or survival was measured. In the full-text screening, data were excluded for the following criteria:
+
+* Non-English literature, books without links to primary source, and non-peer-reviewed articles.
+*	Studies that extracted *Bd* load from dead anurans in the wild, as death in the wild may not be directly caused by *Bd* directly.
+*	Studies that did not quantify *Bd* load, and only presented *Bd* prevalence or categorical detection of *Bd* (positive or negative detection).
+*	Studies that capped *Bd* load based on maximum standard runs, e.g. @Brannelly2015.
+*	Studies that exposed amphibians to *Bs*, or co-exposed *Bd* with *Bs*.
+*	Exposed amphibians to *Bd* during the egg or larval life stage.
+*	Treatments with additional experimental stressors e.g., agrochemicals, pharmaceuticals, UV exposure, presence of predators.
+*	Data from isolated or cultured cells (*in-vitro* results), as they do not provide functionally relevant responses.
+*	Non-quantifiable traits such as histological sections, electron-microscope images, multivariate principal components with arbitrary units.
+*	Molecular responses not directly related to functional traits such as transcriptomics, proteomics, and mRNA expression.
+
+## Conversion statistics {-}
+The correlation coefficient (*r*) was calculated from inferential statistics with the following equations \@ref(eq:conv) from @Lipsey2001, @Nakagawa2007, and @Noble2017:
+
+\begin{equation}
+r = \sqrt{[t^2 / (t^2 + d.f.)]} = \sqrt{[F / (F + d.f.)]} = \sqrt{(\chi^2 / n)},
+(\#eq:conv)
+\end{equation}
+
+where $t$ = t-statistics, $F$ = F-statistics, $d.f.$ = model denominator degrees of freedom, $\chi^2$ = chi-squared statistics, and $n$ = sample size. Effect sizes from inferential statistics were only retained when directions could be determined (e.g., $F$ and $\chi^2$ alone do not contain directional information). Studies that presented standardised mean differences, as Cohen’s *d*, were converted to *r* with the following equation \@ref(eq:dconv) from @Borenstein2009:
+
+\begin{equation}
+r = \frac{d}{\sqrt{d^2 + a}},
+(\#eq:dconv)
+\end{equation}
+
+where $a$ is a correction factor \@ref(eq:corr) for cases where $n_1 \neq n_2$,
+
+\begin{equation}
+a = \frac{(n_1 + n_2)^2}{n_1n_2},
+(\#eq:corr)
+\end{equation}
+
+else, $a$ = 4.
+
+## Keyword co-occurrence network analysis {-}
+
+During the systemetic review, a keyword co-occurrence network analysis was performed using the näive Boolean search from Web of Science and citations in Table S1 from Wu (2019) using the `litsearchr` *R* package [@Grames2019].
+
+```{r network, message=FALSE, warning=FALSE, results="hide"}
+# Import search results downloaded from Github
+naive_results   <- litsearchr::import_results(file = "/Users/nicholaswu/Library/CloudStorage/OneDrive-WesternSydneyUniversity/Chytrid meta-analysis/Initial search/Wu_table_ref.txt")
+naive_results_2 <- litsearchr::import_results(file = "/Users/nicholaswu/Library/CloudStorage/OneDrive-WesternSydneyUniversity/Chytrid meta-analysis/Initial search/naive_search_WoS_211028.txt")
+
+# Extract terms from titles
+terms_title <- litsearchr::extract_terms(text = naive_results[, "title"], 
+                                         method = "fakerake", 
+                                         min_freq = 4, 
+                                         max_n = 2)
+
+terms_title2 <- litsearchr::extract_terms(text = naive_results_2[, "title"], 
+                                          method = "fakerake", 
+                                          min_freq = 2, 
+                                          max_n = 2)
+
+# Combine search terms and create document-feature matrix (DFM)
+terms   <- unique(c(terms_title, terms_title2)) # Combine both term files
+docs    <- unique(c(naive_results[, "title"], naive_results_2[, "title"])) # extract titles
+dfm     <- litsearchr::create_dfm(elements = docs, features = terms) # create dfm
+network <- litsearchr::create_network(dfm, min_studies = 5)
+
+# Pruning
+strengths      <- igraph::strength(network)
+term_strengths <- data.frame(term = names(strengths), strength = strengths, row.names = NULL) %>%
+  dplyr::mutate(rank = rank(strength, ties.method = "min")) %>%
+  dplyr::arrange(strength)
+```
+
+
+```{r Fig S1, echo=FALSE, fig.align='center', fig.height=6, fig.width=7, message=FALSE}
+# Plot network
+figS1a <- ggraph::ggraph(network, layout = "stress") +
+  coord_fixed() +
+  expand_limits(x = c(-2, 10)) +
+  ggraph::geom_edge_link(aes(alpha = weight)) +
+  ggraph::geom_node_point(shape = "circle filled", fill = "white") +
+  ggraph::geom_node_text(aes(label = name), hjust = "outward", 
+                 nudge_x = -0.05, size = 2.5, check_overlap = TRUE) +
+  guides(edge_alpha = "none") +
+  theme(panel.background = element_blank())
+
+# Plot strength
+figS1b <- ggplot(term_strengths, aes(x = rank, y = strength, label = term)) +
+  geom_line() +
+  geom_point(shape = "circle filled", fill = "white") +
+  geom_text(data = dplyr::filter(term_strengths, rank > 5), hjust = "right", 
+            size = 2.5, nudge_y = 30, check_overlap = TRUE) +
+  ylab("Co-occurance strength") + xlab("Rank") +
+  mytheme()
+
+cowplot::plot_grid(figS1a, figS1b, ncol = 1, labels = c("a", "b"))
+```
+
+**Fig. S1.** Output from the keyword co-occurrence network analysis. (**a**) Visualisation of the network where each node represents a term, and the line thickness represents the weight of linking nodes, i.e., the terms appearing in more articles together. (**b**) The strength of each term in ascending order from left to right. 
+
+## PRISMA flow-diagram {-}
+
+![](https://raw.githubusercontent.com/nicholaswunz/chytrid-meta-analysis/main/files/Fig%20S2%20-%20PRISMA%20diagram.png)
+
+**Fig. S2.** PRISMA flow diagram for the systematic data-collection process. *n* = number of papers remaining after each stage of selection. *k* = number of effect size after processing individual data, and *n* is number of observations/records after processing data. Dashed boxes indicate Boolean search string for Web of Science and Scopus. 
+
+***
+# Dataset {-}
+
+## Calculate effect size, $Z_r$, and sampling variance, $v(Z_r)$ {-}
+
+The raw data for analysis is available on [GitHub](https://github.com/nicholaswunz/chytrid-meta-analysis). This section is the workflow to import and clean the raw data for analysis. Data were separated by raw data, correlation data, and survival data. The correlation coefficient and sample size was calculated from the raw data and merged with the correlation data (`es_all_dat`).
+
+Effect size as the Fisher z-transformation of the correlation coefficient *r*, $Z_r$ \@ref(eq:Zr), and the sampling variance, $v(Z_r)$ \@ref(eq:Zrv), was calculated following @Hedges2014:
+
+\begin{equation}
+Z_r = \frac{1}{2}ln \left( \frac{1+r}{1-r}\right),
+(\#eq:Zr)
+\end{equation}
+
+\begin{equation}
+v(Z_r) = \frac{1}{n - 3},
+(\#eq:Zrv)
+\end{equation}
+
+where *r* is the correlation coefficient, and *n* is the sampling size. The **standard error**, $se_i$ \@ref(eq:Zrsei), was calculated as:
+
+\begin{equation}
+se_{i} = \frac{1}{\sqrt{n - 3}}.
+(\#eq:Zrsei)
+\end{equation}
+
+The inverse of $se_i$ or **precision** \@ref(eq:Zrinv) was calculated as:
+
+\begin{equation}
+p_{i} = \frac{1}{se_i}.
+(\#eq:Zrinv)
+\end{equation}
+
+The inverse of sampling variance or **weight** \@ref(eq:Zrw) for calculating heterogeneity:
+
+\begin{equation}
+w_{i} = \frac{1}{v(Z_r)}.
+(\#eq:Zrw)
+\end{equation}
+
+All conversions for the standard error ($se_i$), sampling variance, precision (the inverse of $se_i$) and weight (the inverse of variance) followed @Nakagawa2022.
+
+```{r clean, message=FALSE}
+# Load and clean raw data
+trait_dat <- read.csv("https://raw.githubusercontent.com/nicholaswunz/chytrid-meta-analysis/main/data/trait_raw_data.csv")  %>% 
+  dplyr::filter(trait != "Survival") %>% 
+  dplyr::mutate(species_OTL = as.factor(species_OTL),
+                trait_value = as.numeric(trait_value),
+                trait       = as.factor(trait),
+                PCR_meth    = as.factor(PCR_meth),
+                response    = as.factor(response),
+                lnDose      = log(dose_ZE_ml + 1),
+                lnBd        = log(Bd + 1),
+                temp_K      = trt_temp + 273.15, # convert temperature Celcius to Kelvin
+                inv_temp    = 1 / 8.62e-5  * (1 / mean(temp_K, na.rm = TRUE) - 1 / temp_K) # standardise to mean temp, Boltzmann constant as eV/K
+  ) %>%
+  dplyr::select(-one_of(c("notes", "title", "ref")))
+
+# Clean effect size data
+es_dat <- read.csv("https://raw.githubusercontent.com/nicholaswunz/chytrid-meta-analysis/main/data/trait_corr_data.csv")  %>% 
+  dplyr::mutate(study_ID    = ifelse(notes == "repeated", study_ID, study_ID + max(trait_dat$study_ID)),
+                species_OTL = as.factor(species_OTL),
+                lnDose      = log(dose_ZE_ml + 1),
+                lnBd        = log(Bd + 1),
+                resistance  = as.factor(resistance),
+                trait       = as.factor(trait),
+                response    = as.factor(response),
+                Zr          = (1 / 2) * log((1 + corr_coeff) / (1 - corr_coeff)), # Fisher-transformed correlation coefficient
+                Zr_v        = 1 / (sample_size - 3), # sampling variance (v)
+                Zr_sei      = 1 / sqrt(sample_size - 3), # standard error (SE)
+                Zr_inv      = 1 / Zr_sei, # precision (inverse of SE) 
+                Zr_w        = 1 / Zr_v) %>% # weight (inverse of Zr_v))
+  dplyr::select(-one_of(c("notes", "title", "ref")))
+
+# Clean survival data
+surv_dat <- read.csv("https://raw.githubusercontent.com/nicholaswunz/chytrid-meta-analysis/main/data/trait_raw_data.csv")  %>% 
+  dplyr::filter(trait == "Survival") %>% 
+  dplyr::mutate(species_OTL = as.factor(species_OTL),
+                resistance  = as.factor(resistance),
+                life_stage  = as.factor(life_stage),
+                lnDose      = log(dose_ZE_ml + 1),
+                lnBd        = log(Bd + 1),
+                lnMass      = log(mass_g),
+                lnTime      = log(time_post_days),
+                temp_K      = trt_temp + 273.15, # convert temperature Celcius to Kelvin
+                inv_temp    = 1 / 8.62e-5  * (1 / mean(temp_K, na.rm = TRUE) - 1 / temp_K), # standardise to mean temp, Boltzmann constant as eV/K
+                alive       = ifelse(trait_value == "Alive", 1, 0)) %>%
+  tidyr::unite("species_lifestage", c("species", "life_stage"), sep = "_", remove = FALSE) %>%
+  dplyr::select(-one_of(c("notes", "title", "ref"))) 
+
+# For raw data (trait_dat), calculate correlation coefficient, then calculate effect size
+effect_size_dat <- as.data.frame(trait_dat %>%
+                                    dplyr::group_by(study_ID, bio_hier, trait, species, response) %>%
+                                    dplyr::summarise(corr_coeff     = cor(Bd, trait_value, method = "pearson"),
+                                                     sample_size    = length(trait_value),
+                                                     author_first   = unique(author_first),
+                                                     year           = median(year),
+                                                     extracted      = unique(extracted),
+                                                     order          = unique(order),
+                                                     family         = unique(family),
+                                                     species        = unique(species),
+                                                     species_OTL    = unique(species_OTL),
+                                                     origin         = unique(origin),
+                                                     setting        = unique(setting),
+                                                     life_stage     = unique(life_stage),
+                                                     strain         = unique(strain),
+                                                     mean_mass_g    = mean(mass_g),
+                                                     trt_temp       = mean(trt_temp),
+                                                     dose_ZE_ml     = mean(dose_ZE_ml[dose_ZE_ml != 0]),
+                                                     Bd             = mean(Bd[Bd != 0]),
+                                                     time_post_days = median(time_post_days[Bd != 0]),
+                                                     lnBd           = mean(lnBd[lnBd != 0]))) %>%
+  dplyr::mutate(Zr     = (1 / 2) * log((1 + corr_coeff) / (1 - corr_coeff)), # Fisher-transformed correlation coefficient
+                Zr_v   = 1 / (sample_size - 3), # sampling variance (v)
+                Zr_sei = 1 / sqrt(sample_size - 3), # standard error (SE)
+                Zr_inv = 1 / Zr_sei, # precision (inverse of SE) 0
+                Zr_w   = 1 / Zr_v, # weight (inverse of Zr_v)
+                Zr     = ifelse(response %in% c("Evaporative water loss", "AQP activity", "Skin permeability", 
+                                                'Cutaneous ion loss', 'Muscle water content', "Caspase activity"), -abs(Zr), Zr)) 
+
+# Combine effect size dataset
+es_all_dat <- bind_rows(effect_size_dat, es_dat) %>%
+  tibble::rowid_to_column("es_ID") %>% # add effect size ID
+  dplyr::mutate(year_centre = year - mean(year)) # mean-centring year of publication)
+```
+
+## Data summary {.tabset .tabset-fade .tabset-pills -}
+
+The `es_all_dat` used for the meta-analysis comprises of `r nrow(es_all_dat)` individual effect sizes from `r length(unique(es_all_dat$study_ID))` studies across `r length(unique(es_all_dat$species_OTL))` species (detailed in **Supplementary Table S1**).
+
+### Table S1 - Summary {.tabset .tabset-fade .tabset-pills -} 
+
+**Table S1 - Responses.** Trait categories associated with *Bd* infection and the specific responses within these traits. Number of effect sizes, studies and species are shown. Responses with asterisks were corrected for direction. AQP = aquaporins, ENaC = epithelial sodium channel, NKA = sodium potassium pump, *CT~max~* = critical thermal maxima, *CT~min~* = critical thermal minima.
+
+```{r tableS1a, echo=FALSE, message=FALSE}
+tableS1 <- data.frame(es_all_dat %>% 
+  dplyr::group_by(trait, response) %>% 
+  dplyr::summarise(ef_n = n(),
+                   study_n = length(unique(study_ID)),
+                   species_n = length(unique(species)))) %>%
+  dplyr::mutate(response = case_when(
+    response %in% "Body condition" ~ "Body condition (residual or index)",
+    response %in% "Body size" ~ "Body size (body mass or snout-vent-length)",
+    response %in% "Blood CO2" ~ "Blood CO~2~",
+    response %in% "Bd-antibodies" ~ "*Bd*-antibodies",
+    response %in% "L/N ratio" ~ "Lymphocyte/neutrophil ratio",
+    response %in% "N/L ratio" ~ "Neutrophil/lymphocyte ratio",
+    response %in% "Cutaneous ion loss" ~ "Cutaneous ion loss*",
+    response %in% "Evaporative water loss" ~ "Evaporative water loss*",
+    response %in% "Caspase activity" ~ "Caspase activity*",
+    response %in% "Skin permeability" ~ "Skin permeability*",
+    response %in% "Skin sheds" ~ "Skin sheds*",
+    response %in% "CTmax" ~ "*CT~max~*",
+    response %in% "CTmin" ~ "*CT~min~*",
+    TRUE ~ as.character(response)))
+  
+# Prepare column names with LaTeX
+tableS1 %>%
+  dplyr::rename("Categorised trait" = trait,
+                "Specific reponse"  = response,
+                "Effect size (*k*)" = ef_n,
+                "Studies (*n*)"     = study_n,
+                "Species (*n*)"     = species_n) %>%
+  knitr::kable() 
+```
+
+### Life stage {.tabset .tabset-fade .tabset-pills -} 
+
+**Table S1 - Life stage.** Continuation of data summary with additional information on the number of effect size, studies, and species in the database by life stage (adult or Juvenile). 
+
+```{r tableS1b, echo=FALSE}
+data.frame(es_all_dat %>% 
+                dplyr::group_by(life_stage) %>% 
+                dplyr::summarise(ef_n    = n(),
+                                 study_n = length(unique(study_ID)),
+                                 species_n = length(unique(species)))) %>%
+  dplyr::arrange(-ef_n) %>%
+  dplyr::rename("Life stage"        = life_stage,
+                "Effect size (*k*)" = ef_n,
+                "Studies (*n*)"     = study_n,
+                "Species (*n*)"     = species_n) %>%
+  knitr::kable()
+```
+
+### Species {.tabset .tabset-fade .tabset-pills -} 
+
+**Table S1 - Species.** Continuation of data summary with additional information on the number of effect size, and studies in the database by species. 
+
+```{r tableS1c, echo=FALSE}
+data.frame(es_all_dat %>% 
+                dplyr::group_by(species) %>% 
+                dplyr::summarise(ef_n    = n(),
+                                 study_n = length(unique(study_ID)))) %>%
+  format_cells(1:52, 1, "italics") %>%
+  dplyr::mutate(species = str_replace(species, "_", " ")) %>%
+  dplyr::arrange(-ef_n) %>%
+  dplyr::rename("Species"           = species,
+                "Effect size (*k*)" = ef_n,
+                "Studies (*n*)"     = study_n) %>%
+  knitr::kable()
+```
+
+### Traits {.tabset .tabset-fade .tabset-pills -} 
+
+**Table S1 - Traits** Continuation of data summary with additional information on the number of effect size, studies, and species in the database traits. 
+
+```{r tableS1d, echo=FALSE}
+data.frame(es_all_dat %>% 
+             dplyr::group_by(trait) %>% 
+             dplyr::summarise(ef_n      = n(),
+                              study_n   = length(unique(study_ID)),
+                              species_n = length(unique(species)))) %>%
+  dplyr::arrange(-ef_n) %>%
+  dplyr::rename("Trait"             = trait,
+                "Effect size (*k*)" = ef_n,
+                "Studies (*k*)"     = study_n,
+                "Species (*n*)"     = species_n) %>%
+  knitr::kable()
+```
+
+***
+
+## Prepare phylogeny for analysis {-}
+
+This section provides the workflow to extract the phylogenetic tree from the [Open Tree of Life](https://tree.opentreeoflife.org/) (OTL; see phylogenetic reconstruction in main text), match the OTL names with the data set, and create a correlation matrix for subsequent analysis. The phylogenetic tree produced in *R* for the **Supplementary Figure S3** was modified in [Adobe Illustrator](https://www.adobe.com/au/products/illustrator.html) for clarity.
+
+```{r phylo, message=FALSE, results="hide"}
+species_comb <- rbind(es_all_dat %>% dplyr::select(order, family, species, species_OTL), 
+                      surv_dat %>% dplyr::select(order, family, species, species_OTL)) # 'surv_data_clean' created below
+species_all  <- sort(unique(as.character(species_comb$species_OTL))) # generate list of species (as character format)
+taxa         <- rotl::tnrs_match_names(names = species_all) # match taxonomic names to the OTL
+
+# check if species list match OT identifier
+#taxa[taxa$approximate_match == TRUE,] # none so far
+
+# retrieving phylogenetic relationships among taxa in the form of a trimmed sub-tree
+tree <- rotl::tol_induced_subtree(ott_ids = rotl::ott_id(taxa), label_format = "name")
+
+# Compute branch lengths
+tree <- ape::compute.brlen(tree, method = "Grafen", power = 1)
+tree <- ape::multi2di(tree, random = TRUE) # use a randomization approach to deal with polytomies
+
+# Check tree is ultrametric
+#ape::is.ultrametric(tree) # TRUE
+
+# Create correlation matrix for analysis
+phylo_cor <- ape::vcv(tree, cor = T)
+```
+
+
+```{r Fig S3, echo=FALSE, fig.align='center', fig.height=7.5, fig.width=6, message=FALSE}
+tree_tip_label       <- tree$tip.label # extract tree tip names
+es_all_dat$species   <- sub(" ", "_", es_all_dat$species_OTL)
+es_all_dat$species   <- factor(es_all_dat$species, levels = tree_tip_label) # relevel order by tree
+species_comb$species <- sub(" ", "_", species_comb$species_OTL)
+species_comb$species <- factor(species_comb$species, levels = tree_tip_label) # relevel order by tree
+
+sp_trait_dat <- species_comb %>% 
+  dplyr::distinct(species) %>% 
+  dplyr::mutate(family     = as.factor(species_comb$family[match(species, species_comb$species)]),
+                order      = as.factor(species_comb$order[match(species, species_comb$species)]),
+                species_OTL = species_comb$species[match(species, species_comb$species)]) %>% 
+  tibble::column_to_rownames(var = 'species')
+
+# Plot tree
+mycol <- viridis::viridis(12) # set 12 discrete colours
+#diversitree::trait.plot(tree, sp_trait_dat, cols = list(Family = mycol), type = 'p', cex.lab = 0.7, w = 0.05)
+```
+
+![](https://raw.githubusercontent.com/nicholaswunz/chytrid-meta-analysis/main/files/Fig%20S3%20-%20Phylogenetic%20tree.png)
+
+**Fig. S3.** Phylogenetic reconstruction of `r length(unique(levels(species_comb$species_OTL)))` amphibians used in the study from the Open Tree of Life. The phylogeny was converted to a correlation matrix for the meta-analysis.
+
+***
+
+# Meta-analysis {-}
+
+## Phylogenetically controlled, multi-level meta-analysis and meta-regression {-}
+
+Run analysis to first look at the null effect of *Bd* infection on all responses ($Z_r$) without moderators (`null_model`), then with the following moderators days post-exposure, life stage (adults or juveniles), origin (wild caught or lab raised), natural logarithm of inoculation dose, and treatment temperature (`overall_model`). A follow up analysis was performed to estimate of coefficients for every factor level to obtain posterior distributions of effect size between biological and functional traits (`trait_model`).
+
+```{r models, message=FALSE, cache=TRUE, results="hide"}
+meta_prior    <- c(set_prior("cauchy(0, 1)", class = "sd")) # Cauchy on tau (random effect variance), normal on fixed effect
+
+# Null model - Without moderators
+set.seed(10)
+null_model <- brms::brm(Zr | se(Zr_sei) ~ 1 + (1 | es_ID) + (1 | study_ID) + (1 | species_OTL) + (1 | gr(species, cov = phylo)),
+                           data    = es_all_dat,
+                           family  = gaussian,
+                           data2   = list(phylo = phylo_cor),
+                           prior   = meta_prior,
+                           iter    = 1e4, warmup = 5e3, cores = 4, chains = 4,
+                           control = list(adapt_delta = 0.999, max_treedepth = 18))
+
+# Meta-regression model - With moderators
+overall_model <- brms::brm(Zr | se(Zr_sei) ~ time_post_days + life_stage + origin + lnDose + trt_temp + 
+                             (1 | es_ID) + (1 | study_ID) + (1 | species_OTL) + (1 | gr(species, cov = phylo)),
+                           data    = es_all_dat,
+                           family  = gaussian,
+                           data2   = list(phylo = phylo_cor),
+                           prior   = meta_prior,
+                           iter    = 1e4, warmup = 5e3, cores = 4, chains = 4,
+                           control = list(adapt_delta = 0.999, max_treedepth = 18))
+
+# Trait-specific meta-regression model
+trait_model <- brms::brm(Zr | se(Zr_sei) ~ -1 + trait + life_stage + year_centre +
+                           (1 | es_ID) + (1 | study_ID) + (1 | species_OTL) + (1 | gr(species, cov = phylo)),
+                         data    = es_all_dat %>%
+                           dplyr::group_by(trait) %>% 
+                           dplyr::filter(n() >= 5),
+                         family  = gaussian,
+                         data2   = list(phylo = phylo_cor),
+                         prior   = meta_prior,
+                         iter    = 1e4, warmup = 5e3, cores = 4, chains = 4,
+                         control = list(adapt_delta = 0.999, max_treedepth = 18))
+```
+
+## Publication bias test {-}
+
+Publication bias was tested by using the same formula as the `null_model` with the inclusion of the mean centring of year (test for time-lag bias) and the square root of the sampling variance (test for samm-sample bias) as moderators (`bias_model`).
+
+```{r bias, message=FALSE, cache=TRUE, results="hide"}
+bias_model <- brms::brm(Zr | se(Zr_sei) ~ 1 + year_centre + sqrt(Zr_v) +
+                             (1 | es_ID) + (1 | study_ID) + (1 | species_OTL) + (1 | gr(species, cov = phylo)),
+                           data    = es_all_dat,
+                           family  = gaussian,
+                           data2   = list(phylo = phylo_cor),
+                           prior   = meta_prior,
+                           iter    = 1e4, warmup = 5e3, cores = 4, chains = 4,
+                           control = list(adapt_delta = 0.999, max_treedepth = 18))
+
+```
+
+
+```{r Fig S4, echo = FALSE, fig.width = 7, fig.height = 6, fig.align =' center'}
+null_model_pp    <- brms::pp_check(null_model, type = "scatter_avg")
+overall_model_pp <- brms::pp_check(overall_model, type = "scatter_avg")
+trait_model_pp   <- brms::pp_check(trait_model, type = "scatter_avg")
+bias_model_pp    <- brms::pp_check(bias_model, type = "scatter_avg")
+
+cowplot::plot_grid(null_model_pp, overall_model_pp, trait_model_pp, bias_model_pp, 
+                   ncol = 2, labels = c('a', 'b', 'c', 'd'))
+```
+
+**Fig. S4.** Scatterplots of the observed data (y) vs the average simulated data (y~rep~) from the posterior predictive distribution for the (**a**) null model, (**b**) the overall model, (**c**) the trait model, and (**c**) the bias model. Dashed line represents a slope of 1. 
+
+
+## Model output {.tabset .tabset-fade .tabset-pills -}
+
+### Table S2 - Null model {.tabset .tabset-fade .tabset-pills -} 
+
+**Table S2.** Mean parameter estimates, estimate error, and 95% Bayesian credible intervals for the null model, which includes the intercept ($\beta_0$). Group-level effects include the standard deviations ($\sigma$) for individual-level observations ($\sigma_{residual}^2$), study-level observations ($\sigma_{study}^2$), species identity ($\sigma_{species}^2$), and phylogenetic relatedness ($\sigma_{phylogeny}^2$).
+
+```{r tableS2, echo = FALSE}
+# Fixed effect
+fef <- brms::fixef(null_model) %>% 
+  as.data.frame(.) %>%
+  tibble::rownames_to_column("Parameter") %>% 
+  dplyr::mutate(Parameter = str_replace(Parameter, "M", "-")) %>% 
+  dplyr::mutate(Parameter = case_when(
+    Parameter == "Intercept" ~ "$\\beta_0$")) %>% 
+  tibble::add_row(Parameter = "**Fixed effects**", .before = 1)
+
+# Random effect
+ref <- summary(null_model)$random %>% 
+  bind_rows() %>% # unlist
+  tibble::rownames_to_column("Parameter") %>% 
+  dplyr::select(1:5) %>% 
+  dplyr::mutate(Parameter = c("$\\sigma_{residual}^2$", 
+                              "$\\sigma_{phylogeny}^2$",
+                              "$\\sigma_{species}^2$",
+                              "$\\sigma_{study}^2$")) %>%   
+  dplyr::rename(Q2.5  = 4, 
+                Q97.5 = 5) %>% 
+  tibble::add_row(Parameter = "**Group-level effects**", .before = 1)
+
+# Render table
+bind_rows(fef, ref) %>% 
+  remove_rownames() %>% 
+  knitr::kable(digits = 2)
+```
+
+### Table S3 - Heterogeneity and variance {.tabset .tabset-fade .tabset-pills -} 
+
+**Table S3.** Heterogeneity and $R^2$ of the null and overall model. *k* = number of estimates, and $I^2$ = heterogeneity. $R_{marginal}^2$ represents the variance explained by moderators, while $R_{conditional}^2$ represents the variance explained by both moderators and group-level effects. Estimates shown correspond to modes and 95% highest posterior density intervals.
+
+```{r tableS3, echo = FALSE}
+# Heterogeneity - Null
+null_post <- brms::posterior_samples(null_model) # extracting the posterior distributions from our models
+
+# WI = weight
+WI <- na.omit(es_all_dat$Zr_w)
+
+# s2I = measurement error variance = sigma2m
+s2I <- sum(WI[is.finite(WI)] * (length(WI) - 1)) / (sum(WI[is.finite(WI)]) ^ 2 - sum(WI[is.finite(WI)] ^ 2))
+
+# total variance, including measurement error variance
+total_var_null <- null_post$sd_es_ID__Intercept +
+  null_post$sd_species__Intercept +
+  null_post$sd_species_OTL__Intercept +
+  null_post$sd_study_ID__Intercept +
+  s2I
+
+# total heterogeneity I2
+I2_total     <- (total_var_null - s2I) / total_var_null
+I2_total_est <- data.frame("x" = as.character(round(MCMCglmm::posterior.mode(I2_total), 3) * 100)) %>%
+  tibble::add_row(x = gsub(" ", "", addbracket(paste(round(bayestestR::hdi(I2_total, ci = 0.95)$CI_low, 3) * 100,
+                                                     round(bayestestR::hdi(I2_total, ci = 0.95)$CI_high, 3) * 100, sep = "–")))) %>%
+  dplyr::rename("$I_{total}^2$" = x)
+
+# observational level I2
+I2_esID     <- null_post$sd_es_ID__Intercept / total_var_null
+I2_esID_est <- data.frame("x" = as.character(round(MCMCglmm::posterior.mode(I2_esID), 3) * 100)) %>%
+  tibble::add_row(x = gsub(" ", "", addbracket(paste(round(bayestestR::hdi(I2_esID, ci = 0.95)$CI_low, 3) * 100,
+                                                     round(bayestestR::hdi(I2_esID, ci = 0.95)$CI_high, 3) * 100, sep = "–")))) %>%
+  dplyr::rename("$I_{residual}^2$" = x)
+
+
+# studyID I2
+I2_studyID     <- null_post$sd_study_ID__Intercept / total_var_null
+I2_studyID_est <- data.frame("x" = as.character(round(MCMCglmm::posterior.mode(I2_studyID), 3) * 100)) %>%
+  tibble::add_row(x = gsub(" ", "", addbracket(paste(round(bayestestR::hdi(I2_studyID, ci = 0.95)$CI_low, 3) * 100,
+                                                     round(bayestestR::hdi(I2_studyID, ci = 0.95)$CI_high, 3) * 100, sep = "–")))) %>%
+  dplyr::rename("$I_{study}^2$" = x)
+
+# phylogeny I2: notice that s2I is subtracted from this calculation as phylogenetic
+# relatedness is a "fixed random effect"
+I2_phylo     <- null_post$sd_species__Intercept / (total_var_null - s2I)
+I2_phylo_est <- data.frame("x" = as.character(round(MCMCglmm::posterior.mode(I2_phylo), 3) * 100)) %>%
+  tibble::add_row(x = gsub(" ", "", addbracket(paste(round(bayestestR::hdi(I2_phylo, ci = 0.95)$CI_low, 3) * 100,
+                                                     round(bayestestR::hdi(I2_phylo, ci = 0.95)$CI_high, 3) * 100, sep = "–")))) %>%
+  dplyr::rename("$I_{phylogeny}^2$" = x)
+
+# speciesID I2
+I2_species     <- null_post$sd_species_OTL__Intercept / total_var_null
+I2_species_est <- data.frame("x" = as.character(round(MCMCglmm::posterior.mode(I2_species), 3) * 100)) %>%
+  tibble::add_row(x = gsub(" ", "", addbracket(paste(round(bayestestR::hdi(I2_species, ci = 0.95)$CI_low, 3) * 100,
+                                                     round(bayestestR::hdi(I2_species, ci = 0.95)$CI_high, 3) * 100, sep = "–")))) %>%
+  dplyr::rename("$I_{species}^2$" = x)
+
+# R2 calculation
+r2_mar <- data.frame("x" = as.character(round(data.frame(performance::r2_bayes(null_model))[2,1], 4) * 100)) %>%
+  tibble::add_row(x = gsub(" ", "", addbracket(paste(round(data.frame(performance::r2_bayes(null_model))[2,4], 4) * 100,
+                                                     round(data.frame(performance::r2_bayes(null_model))[2,5], 4) * 100, sep = "–")))) %>%
+  dplyr::rename("$R_{marginal}^2$" = x)
+
+r2_con <- data.frame("x" = as.character(round(data.frame(performance::r2_bayes(null_model))[1,1], 3) * 100)) %>%
+  tibble::add_row(x = gsub(" ", "", addbracket(paste(round(data.frame(performance::r2_bayes(null_model))[1,4], 3) * 100,
+                                                     round(data.frame(performance::r2_bayes(null_model))[1,5], 3) * 100, sep = "–")))) %>%
+  dplyr::rename("$R_{conditional}^2$" = x)
+  
+
+# Null summary
+null_het <- cbind("Model" = c("Null",""), I2_esID_est, I2_studyID_est, I2_species_est, I2_phylo_est, I2_total_est, r2_mar, r2_con)
+
+# Heterogeneity - Overall
+overall_post <- brms::posterior_samples(overall_model) # extracting the posterior distributions from our models
+
+# total variance, including measurement error variance
+total_var_overall <- overall_post$sd_es_ID__Intercept +
+  overall_post$sd_species__Intercept +
+  overall_post$sd_species_OTL__Intercept +
+  overall_post$sd_study_ID__Intercept +
+  s2I
+
+# total heterogeneity I2
+I2_total     <- (total_var_overall - s2I) / total_var_overall
+I2_total_est <- data.frame("x" = as.character(round(MCMCglmm::posterior.mode(I2_total), 3) * 100)) %>%
+  tibble::add_row(x = gsub(" ", "", addbracket(paste(round(bayestestR::hdi(I2_total, ci = 0.95)$CI_low, 3) * 100,
+                                                     round(bayestestR::hdi(I2_total, ci = 0.95)$CI_high, 3) * 100, sep = "–")))) %>%
+  dplyr::rename("$I_{total}^2$" = x)
+
+# observational level I2
+I2_esID     <- overall_post$sd_es_ID__Intercept / total_var_overall
+I2_esID_est <- data.frame("x" = as.character(round(MCMCglmm::posterior.mode(I2_esID), 3) * 100)) %>%
+  tibble::add_row(x = gsub(" ", "", addbracket(paste(round(bayestestR::hdi(I2_esID, ci = 0.95)$CI_low, 3) * 100,
+                                                     round(bayestestR::hdi(I2_esID, ci = 0.95)$CI_high, 3) * 100, sep = "–")))) %>%
+  dplyr::rename("$I_{residual}^2$" = x)
+
+
+# studyID I2
+I2_studyID     <- overall_post$sd_study_ID__Intercept / total_var_overall
+I2_studyID_est <- data.frame("x" = as.character(round(MCMCglmm::posterior.mode(I2_studyID), 3) * 100)) %>%
+  tibble::add_row(x = gsub(" ", "", addbracket(paste(round(bayestestR::hdi(I2_studyID, ci = 0.95)$CI_low, 3) * 100,
+                                                     round(bayestestR::hdi(I2_studyID, ci = 0.95)$CI_high, 3) * 100, sep = "–")))) %>%
+  dplyr::rename("$I_{study}^2$" = x)
+
+# phylogeny I2: notice that s2I is subtracted from this calculation as phylogenetic
+# relatedness is a "fixed random effect"
+I2_phylo     <- overall_post$sd_species__Intercept / (total_var_overall - s2I)
+I2_phylo_est <- data.frame("x" = as.character(round(MCMCglmm::posterior.mode(I2_phylo), 3) * 100)) %>%
+  tibble::add_row(x = gsub(" ", "", addbracket(paste(round(bayestestR::hdi(I2_phylo, ci = 0.95)$CI_low, 3) * 100,
+                                                     round(bayestestR::hdi(I2_phylo, ci = 0.95)$CI_high, 3) * 100, sep = "–")))) %>%
+  dplyr::rename("$I_{phylogeny}^2$" = x)
+
+# speciesID I2
+I2_species     <- overall_post$sd_species_OTL__Intercept / total_var_overall
+I2_species_est <- data.frame("x" = as.character(round(MCMCglmm::posterior.mode(I2_species), 3) * 100)) %>%
+  tibble::add_row(x = gsub(" ", "", addbracket(paste(round(bayestestR::hdi(I2_species, ci = 0.95)$CI_low, 3) * 100,
+                                                     round(bayestestR::hdi(I2_species, ci = 0.95)$CI_high, 3) * 100, sep = "–")))) %>%
+  dplyr::rename("$I_{species}^2$" = x)
+
+# R2 calculation
+r2_mar <- data.frame("x" = as.character(round(data.frame(performance::r2_bayes(overall_model))[2,1], 4) * 100)) %>%
+  tibble::add_row(x = gsub(" ", "", addbracket(paste(round(data.frame(performance::r2_bayes(overall_model))[2,4], 4) * 100,
+                                                     round(data.frame(performance::r2_bayes(overall_model))[2,5], 4) * 100, sep = "–")))) %>%
+  dplyr::rename("$R_{marginal}^2$" = x)
+
+r2_con <- data.frame("x" = as.character(round(data.frame(performance::r2_bayes(overall_model))[1,1], 3) * 100)) %>%
+  tibble::add_row(x = gsub(" ", "", addbracket(paste(round(data.frame(performance::r2_bayes(overall_model))[1,4], 3) * 100,
+                                                     round(data.frame(performance::r2_bayes(overall_model))[1,5], 3) * 100, sep = "–")))) %>%
+  dplyr::rename("$R_{conditional}^2$" = x)
+
+# Null summary
+over_het <- cbind("Model" = c("Overall",""), I2_esID_est, I2_studyID_est, I2_species_est, I2_phylo_est, I2_total_est, r2_mar, r2_con)
+
+bind_rows(null_het, over_het) %>%
+  remove_rownames() %>% 
+  knitr::kable()
+```
+
+### Table S4 - Bias model {.tabset .tabset-fade .tabset-pills -} 
+
+**Table S4.** Mean parameter estimates, estimate error, and 95% Bayesian credible intervals for the bias model, which includes the intercept ($\beta_0$), publication year and sampling standard error as covariates to test and correct for publication bias. Group-level effects include the standard deviations ($\sigma$) for individual-level observations ($\sigma_{residual}^2$), study-level observations ($\sigma_{study}^2$), species identity ($\sigma_{species}^2$), and phylogenetic relatedness ($\sigma_{phylogeny}^2$).
+
+```{r tableS4, echo = FALSE}
+# Fixed effect
+fef <- brms::fixef(bias_model) %>% 
+  as.data.frame(.) %>%
+  tibble::rownames_to_column("Parameter") %>% 
+  dplyr::mutate(Parameter = str_replace(Parameter, "M", "-")) %>% 
+  dplyr::mutate(Parameter = case_when(
+    Parameter == "Intercept" ~ "$\\beta_0$",
+    Parameter == "year_centre"  ~ "Publication year",
+    Parameter == "sqrtZr_v"  ~ "Sampling standard error")) %>% 
+  tibble::add_row(Parameter = "**Fixed effects**", .before = 1)
+
+# Random effect
+ref <- summary(bias_model)$random %>% 
+  bind_rows() %>% # unlist
+  tibble::rownames_to_column("Parameter") %>% 
+  dplyr::select(1:5) %>% 
+  dplyr::mutate(Parameter = c("$\\sigma_{residual}^2$", 
+                              "$\\sigma_{phylogeny}^2$",
+                              "$\\sigma_{species}^2$",
+                              "$\\sigma_{study}^2$")) %>%   
+  dplyr::rename(Q2.5  = 4, 
+                Q97.5 = 5) %>% 
+  tibble::add_row(Parameter = "**Group-level effects**", .before = 1)
+
+# Render table
+bind_rows(fef, ref) %>% 
+  remove_rownames() %>% 
+  knitr::kable(digits = 2)
+```
+
+### Fig S5 - Funnel plot  {.tabset .tabset-fade .tabset-pills -} 
+```{r funnel, echo = FALSE}
+# Funnel plot
+metafor::funnel(x = es_all_dat$Zr, sei = es_all_dat$Zr_sei, pch = 1)
+```
+
+**Fig. S5.** Funnel plot on the effect size against the study standard error. The white area bordered by dashed lines represents the region of 95% pseudo confidence intervals where 95% of studies are expected to fall in the absence of bias and heterogeneity.
+
+
+### Table S5 - Overall model {.tabset .tabset-fade .tabset-pills -} 
+
+**Table S5.** Mean parameter estimates, estimate error, and 95% Bayesian credible intervals for the overall model, which includes the intercept ($\beta_0$), days post-exposure, life stage (juvenile or adult), origin (wild caught or lab-reared), the natural logarithm of inoculation dose (lnDose), and treatment temperature as fixed effects. Group-level effects include the standard deviations ($\sigma$) for individual-level observations ($\sigma_{residual}^2$), study-level observations ($\sigma_{study}^2$), species identity ($\sigma_{species}^2$), and phylogenetic relatedness ($\sigma_{phylogeny}^2$).
+
+```{r tableS5, echo = FALSE}
+# Fixed effect
+fef <- brms::fixef(overall_model) %>% 
+  as.data.frame(.) %>%
+  tibble::rownames_to_column("Parameter") %>% 
+  dplyr::mutate(Parameter = str_replace(Parameter, "M", "-")) %>% 
+  dplyr::mutate(Parameter = case_when(
+    Parameter == "Intercept" ~ "$\\beta_0$",
+    Parameter == "time_post_days"  ~ "Days post-exposure",
+    Parameter == "life_stageJuvenile"  ~ "Life stage - Juveniles",
+    Parameter == "originWild"  ~ "Origin - Wild",
+    Parameter == "lnDose"  ~ "lnDose",
+    Parameter == "trt_temp"  ~ "Treatment temperature")) %>% 
+  tibble::add_row(Parameter = "**Fixed effects**", .before = 1)
+
+# Random effect
+ref <- summary(overall_model)$random %>% 
+  bind_rows() %>% # unlist
+  tibble::rownames_to_column("Parameter") %>% 
+  dplyr::select(1:5) %>% 
+  dplyr::mutate(Parameter = c("$\\sigma_{residual}^2$", 
+                              "$\\sigma_{phylogeny}^2$",
+                              "$\\sigma_{species}^2$",
+                              "$\\sigma_{study}^2$")) %>%   
+  dplyr::rename(Q2.5  = 4, 
+                Q97.5 = 5) %>% 
+  tibble::add_row(Parameter = "**Group-level effects**", .before = 1)
+
+# Render table
+bind_rows(fef, ref) %>% 
+  remove_rownames() %>% 
+  knitr::kable(digits = 2)
+```
+
+
+### Table S6 - Trait model {.tabset .tabset-fade .tabset-pills -} 
+
+**Table S6.** Mean parameter estimates, estimate error, and 95% Bayesian credible intervals for the trait model, which includes the biological and functional traits, life stage (juvenile or adult), and publication year as fixed effects. Group-level effects include the standard deviations ($\sigma$) for individual-level observations ($\sigma_{residual}^2$), study-level observations ($\sigma_{study}^2$), species identity ($\sigma_{species}^2$), and phylogenetic relatedness ($\sigma_{phylogeny}^2$).
+
+```{r tableS6, echo = FALSE}
+# Fixed effect
+fef <- brms::fixef(trait_model) %>% 
+  as.data.frame(.) %>%
+  tibble::rownames_to_column("Parameter") %>% 
+  dplyr::mutate(Parameter = str_replace(Parameter, "M", "-")) %>% 
+  dplyr::mutate(Parameter = case_when(
+    Parameter == "traitBehaviour" ~ "Behaviour",
+    Parameter == "traitBodycondition" ~ "Body condition",
+    Parameter == "traitCardiovascular" ~ "Cardiovascular",
+    Parameter == "traitEnergymetabolism" ~ "Energy metabolism",
+    Parameter == "traitHormonelevel" ~ "Hormon elevel",
+    Parameter == "traitImmune" ~ "Immune",
+    Parameter == "traitOsmoregulation" ~ "Osmoregulation",
+    Parameter == "traitReproduction" ~ "Reproduction",
+    Parameter == "traitSkinintegrity" ~ "Skin integrity",
+    Parameter == "traitThermoregulation" ~ "Thermoregulation",
+    Parameter == "life_stageJuvenile"  ~ "Life stage - Juveniles",
+    Parameter == "year_centre"  ~ "Publication year")) %>% 
+  tibble::add_row(Parameter = "**Fixed effects**", .before = 1)
+
+# Random effect
+ref <- summary(trait_model)$random %>% 
+  bind_rows() %>% # unlist
+  tibble::rownames_to_column("Parameter") %>% 
+  dplyr::select(1:5) %>% 
+  dplyr::mutate(Parameter = c("$\\sigma_{residual}^2$", 
+                              "$\\sigma_{phylogeny}^2$",
+                              "$\\sigma_{species}^2$",
+                              "$\\sigma_{study}^2$")) %>%   
+  dplyr::rename(Q2.5  = 4, 
+                Q97.5 = 5) %>% 
+  tibble::add_row(Parameter = "**Group-level effects**", .before = 1)
+
+# Render table
+bind_rows(fef, ref) %>% 
+  remove_rownames() %>% 
+  knitr::kable(digits = 2)
+```
+
+***
+
+# Trait sensitivity analysis {-}
+
+## Calculating trait sensitivity {-}
+
+The following workflow uses the raw data set to estimate response-specific sensitivity to *Bd* infection. All response values were standardised to relative change in response.
+
+```{r sen}
+# Extract mean, 10th and 90th quantile control values by species and responses
+control_mean <- as.data.frame(trait_dat %>%
+  dplyr::filter(Bd == 0) %>% 
+  dplyr::group_by(species, response) %>% 
+  dplyr::summarise(mean            = mean(trait_value, na.rm = TRUE),
+                   quantile_10     = quantile(trait_value, .10),
+                   quantile_90     = quantile(trait_value, .90)) %>%
+  tidyr::unite("specific_response", c(species, response), sep = "_",  remove = FALSE)) # unique identifier by species and response
+
+# Combine mean controls and calculate relative change of response
+traits_exposed <- trait_dat %>% 
+  tidyr::unite("specific_response", c(species, response), sep = "_",  remove = FALSE) %>%
+  dplyr::mutate(control           = control_mean$mean[match(specific_response, control_mean$specific_response)], 
+                change            = ifelse(trait_unit == "relative", trait_value, (trait_value - control) / control), # calculate relative change
+                specific_response = as.factor(specific_response),
+                quantile_90       = control_mean$quantile_90[match(specific_response, control_mean$specific_response)],
+                quantile_10       = control_mean$quantile_10[match(specific_response, control_mean$specific_response)],
+                control_90        = ifelse(trait_unit == "relative", trait_value, (quantile_90 - control) / control), # calculate relative 90th quantile
+                control_10        = ifelse(trait_unit == "relative", trait_value, (quantile_10 - control) / control)) # calculate relative 10th quantile
+
+# Run lm models to find ones with good R2 
+R_sq_model <- as.data.frame(traits_exposed %>% 
+                              dplyr::filter(!is.na(change)) %>% # remove NA's
+                              dplyr::group_by(specific_response) %>%
+                              dplyr::do(model = broom::glance(lm(change ~ lnBd, data = .))) %>%
+                              tidyr::unnest(model)) %>%
+  dplyr::select(specific_response, r.squared, adj.r.squared, p.value)
+
+# extract equation (intercept and slope)
+lm_eq <- as.data.frame(traits_exposed %>% 
+                         dplyr::filter(!is.na(change)) %>%
+                         dplyr::group_by(specific_response) %>%
+                         dplyr::do(model = broom::tidy(lm(change ~ lnBd, data = .))) %>% 
+                         tidyr::unnest(model)) %>%
+  dplyr::select(specific_response, term, estimate) %>%
+  reshape(idvar = "specific_response", timevar = "term", direction = "wide") %>% # from long to wide for estimate column
+  dplyr::rename(intercept = "estimate.(Intercept)",
+                slope     = "estimate.lnBd")
+
+# Deal with relative units that were not converted previously (ifelse(trait_unit == "relative", trait_value, (quantile_90 - control) / control))
+control_range <- as.data.frame(traits_exposed %>%
+                                 dplyr::filter(Bd == 0) %>%
+                                 dplyr::group_by(specific_response) %>%
+                                 dplyr::summarise(control_90 = max(control_90),
+                                                  control_10 = min(control_10)))
+
+# Generate Bd load sequence from min and max and predict response
+xseq       <- seq(0, max(traits_exposed$lnBd[!is.na(traits_exposed$lnBd)]), length.out = 50)
+eq_bd_pred <- data.frame(lm_eq %>%
+                           dplyr::group_by(specific_response) %>%
+                           dplyr::summarise(pred = intercept + slope * xseq) %>%
+                           dplyr::mutate(pred_bd    = xseq,
+                                         trait      = traits_exposed$trait[match(specific_response, traits_exposed$specific_response)],
+                                         control    = traits_exposed$control[match(specific_response, traits_exposed$specific_response)],
+                                         control_90 = control_range$control_90[match(specific_response, control_range$specific_response)],
+                                         control_10 = control_range$control_10[match(specific_response, control_range$specific_response)]))
+
+# Keep specific responses with R2 >= 0.1 and p value <= 0.05
+responses_kept <- R_sq_model %>% dplyr::filter(adj.r.squared >= 0.1 | p.value <= 0.05) %>% droplevels()
+kept_pred      <- eq_bd_pred %>% dplyr::filter(specific_response %in% c(levels(responses_kept$specific_response))) %>% droplevels()
+
+# Filter Bd load lower than 10th and higher than 90th quantile control values 
+sensitivity_pos <- data.frame(kept_pred %>%
+                                dplyr::group_by(specific_response) %>%
+                                dplyr::filter(pred_bd != 0 & pred > 0) %>% # in positive direction
+                                dplyr::filter(pred > control_90) %>%
+                                dplyr::summarize(minBd = min(pred_bd)))
+
+sensitivity_neg <- data.frame(kept_pred %>%
+                               dplyr::group_by(specific_response) %>%
+                               dplyr::filter(pred_bd != 0 & pred < 0) %>%  # in negative direction
+                               dplyr::filter(case_when(control < 0 ~ pred < control_90, T ~ pred < control_10)) %>%
+                               dplyr::summarize(minBd = min(pred_bd)))
+
+# Combine sensitivity_pos and sensitivity_neg
+sensitivity <- rbind(sensitivity_pos, sensitivity_neg) %>%
+  dplyr::mutate(lnminBd     = minBd,
+                response    = traits_exposed$response[match(specific_response, traits_exposed$specific_response)],
+                trait       = traits_exposed$trait[match(specific_response, traits_exposed$specific_response)],
+                bio_hier    = traits_exposed$bio_hier[match(specific_response, traits_exposed$specific_response)],
+                species     = traits_exposed$species[match(specific_response, traits_exposed$specific_response)],
+                species_OTL = traits_exposed$species_OTL[match(specific_response, traits_exposed$specific_response)],
+                life_stage  = traits_exposed$life_stage[match(specific_response, traits_exposed$specific_response)],
+                lnDose      = traits_exposed$lnDose[match(specific_response, traits_exposed$specific_response)],
+                inv_temp    = traits_exposed$inv_temp[match(specific_response, traits_exposed$specific_response)])
+
+sensitivity$species <- sub(" ", "_", sensitivity$species_OTL)
+sensitivity$species <- factor(sensitivity$species, levels = tree_tip_label) # relevel order by tree
+```
+
+## Sensitivity analysis {-}
+
+Run phylogenetic corrected, multi-level model to test the sensitivity of traits to *Bd* load.
+
+```{r sen model, message=FALSE, cache=TRUE, results="hide"}
+set.seed(10)
+sensitive_model <- brms::brm(lnminBd ~ -1 + trait + lnDose + inv_temp + (1 | species_OTL) + (1 | gr(species, cov = phylo)),
+                             data    = sensitivity,
+                             family  = gaussian,
+                             data2   = list(phylo = phylo_cor),
+                             prior   = c(prior(normal(0, 5), lb = 0), # mean of 0 and SD of 5
+                                       prior(student_t(3, 0, 5), "sd"), # class of random effect deviation
+                                       prior(student_t(3, 0, 5), "sigma")), # residual SD parameter
+                             iter    = 1e4, warmup = 5e3, cores = 4, chains = 4,
+                             control = list(adapt_delta = 0.99, max_treedepth = 18))
+```
+
+```{r Fig S6, echo = FALSE, fig.width = 4, fig.height = 3, fig.align = 'center'}
+brms::pp_check(sensitive_model, type = "scatter_avg")
+```
+
+**Fig. S6.** Scatterplot of the observed data (y) vs the average simulated data (yrep) from the posterior predictive distribution. Dashed line represents a slope of 1.
+
+## Model output {-}
+
+**Table S7.** Mean parameter estimates, estimate error, and 95% Bayesian credible intervals for the sensitivity model, which includes the functional traits, natural logarithm of inoculation dose (lnDose), and the inverse of temperature as fixed effects. Group-level effects include the standard deviations ($\sigma$) for species identity ($\sigma_{species}^2$), and phylogenetic relatedness ($\sigma_{phylogeny}^2$).
+
+```{r tableS7, echo = FALSE}
+# Fixed effect
+fef <- brms::fixef(sensitive_model) %>% 
+  as.data.frame(.) %>%
+  tibble::rownames_to_column("Parameter") %>% 
+  dplyr::mutate(Parameter = str_replace(Parameter, "M", "-")) %>% 
+  dplyr::mutate(Parameter = case_when(
+    Parameter == "traitBehaviour" ~ "Behaviour",
+    Parameter == "traitBodycondition" ~ "Body condition",
+    Parameter == "traitCardiovascular" ~ "Cardiovascular",
+    Parameter == "traitEnergymetabolism" ~ "Energy metabolism",
+    Parameter == "traitHormonelevel" ~ "Hormone level",
+    Parameter == "traitImmune" ~ "Immune",
+    Parameter == "traitOsmoregulation" ~ "Osmoregulation",
+    Parameter == "traitReproduction" ~ "Reproduction",
+    Parameter == "traitSkinintegrity" ~ "Skin integrity",
+    Parameter == "lnDose"  ~ "lnDose",
+    Parameter == "inv_temp"  ~ "Inverse temperature")) %>% 
+  tibble::add_row(Parameter = "**Fixed effects**", .before = 1)
+
+# Random effect
+ref <- summary(sensitive_model)$random %>% 
+  bind_rows() %>% # unlist
+  tibble::rownames_to_column("Parameter") %>% 
+  dplyr::select(1:5) %>% 
+  dplyr::mutate(Parameter = c("$\\sigma_{phylogeny}^2$",
+                              "$\\sigma_{species}^2$")) %>%   
+  dplyr::rename(Q2.5  = 4, 
+                Q97.5 = 5) %>% 
+  tibble::add_row(Parameter = "**Group-level effects**", .before = 1)
+
+# Render table
+bind_rows(fef, ref) %>% 
+  remove_rownames() %>% 
+  knitr::kable(digits = 2)
+```
+
+***
+
+# Survival analysis {-}
+
+The survival data set comprises of `r length(unique(levels(surv_dat$species_OTL)))` species. 
+
+```{r surv}
+# Rename species based on species_OTL
+surv_dat$species <- sub(" ", "_", surv_dat$species_OTL)
+surv_dat$species <- factor(surv_dat$species, levels = tree_tip_label) # relevel order by tree
+surv_dat <- surv_dat %>% dplyr::mutate(species = factor(species))
+```
+
+## Survival and *Bd* and time-dependent mortality analysis {-}
+
+Run phylogenetic corrected, multi-level models to test for the influence of *Bd* load on survival.
+
+```{r surv model, message=FALSE, cache=TRUE, results="hide"}
+# Binary logistic regression model
+set.seed(10)
+surv_model <- brms::brm(alive ~ 1 + lnBd + time_post_days + lnDose + life_stage + inv_temp + species_OTL + (1 | study_ID:species_OTL) + (1 | gr(species, cov = phylo)),  
+                        data   = surv_dat,
+                        family = bernoulli(link = "logit"), 
+                        data2   = list(phylo = phylo_cor),
+                        prior = c(prior(normal(0, 2), class = Intercept),
+                                  prior(normal(0, 2), class = b)),
+                        iter = 5e3, warmup = 2e3, chains = 4, cores = 4,
+                        control = list(adapt_delta = 0.99, max_treedepth = 18))
+
+time_bd_model <- brms::brm(lnBd ~ lnTime * life_stage + lnDose + inv_temp + (1 | study_ID:species_OTL),  
+                           data    = surv_dat %>% dplyr::filter(alive == 0),
+                           family  = gaussian(),
+                           prior   = c(prior(normal(0, 2), class = Intercept),
+                                       prior(normal(0, 2), class = b)),
+                           iter    = 5e3, warmup = 2e3, chains = 4, cores = 4,
+                           control = list(adapt_delta = 0.99, max_treedepth = 18))
+```
+
+```{r Fig S7, echo = FALSE, fig.width = 7, fig.height = 3, fig.align = 'center'}
+surv_model_pp    <- brms::pp_check(surv_model) + theme(legend.position = "bottom")
+time_bd_model_pp <- brms::pp_check(time_bd_model, type = "scatter_avg") 
+
+cowplot::plot_grid(surv_model_pp, time_bd_model_pp, ncol = 2, align = "h", axis = "bt", labels = c('a', 'b'))
+```
+
+**Fig. S7.** Posterior predictive check for (**a**) the survival model, and (**b**) the *Bd*-time model. The *Bd*-time model is represented by a scatterplot of the observed data (y) vs the average simulated data (yrep) from the posterior predictive distribution. Dashed line represents a slope of 1.
+
+## Model output {.tabset .tabset-fade .tabset-pills - }
+
+### Table S8 - Survival model {.tabset .tabset-fade .tabset-pills -} 
+
+**Table S8.** Mean parameter estimates, estimate error, and 95% Bayesian credible intervals for the probability of survival, which includes the natural logarithm of *Bd* load (lnBd), days post exposure, natural logarithm of inoculation dose (lnDose), life stage, and the inverse of temperature as fixed effects. Group-level effects include the standard deviations ($\sigma$) for phylogenetic relatedness ($\sigma_{phylogeny}^2$) and species-study interaction ($\sigma_{species:study}^2$).
+
+```{r tableS8, echo = FALSE}
+# Fixed effect
+fef <- brms::fixef(surv_model) %>% 
+  as.data.frame(.) %>%
+  dplyr::slice_head(n = 6) %>%
+  tibble::rownames_to_column("Parameter") %>% 
+  dplyr::mutate(Parameter = str_replace(Parameter, "M", "-")) %>% 
+  dplyr::mutate(Parameter = case_when(
+    Parameter == "Intercept" ~ "$\\beta_0$",
+    Parameter == "lnBd"  ~ "lnBd",
+    Parameter == "time_post_days"  ~ "Days post-exposure",
+    Parameter == "lnDose"  ~ "lnDose",
+    Parameter == "life_stageJuvenile"  ~ "Life stage - Juvenile",
+    Parameter == "inv_temp"  ~ "Inverse temperature")) %>% 
+  tibble::add_row(Parameter = "**Fixed effects**", .before = 1)
+
+# Random effect
+ref <- summary(surv_model)$random %>% 
+  bind_rows() %>% # unlist
+  tibble::rownames_to_column("Parameter") %>% 
+  dplyr::select(1:5) %>% 
+  dplyr::mutate(Parameter = c("$\\sigma_{phylogeny}^2$",
+                              "$\\sigma_{species:study}^2$")) %>%   
+  dplyr::rename(Q2.5  = 4, 
+                Q97.5 = 5) %>% 
+  tibble::add_row(Parameter = "**Group-level effects**", .before = 1)
+
+# Render table
+bind_rows(fef, ref) %>% 
+  remove_rownames() %>% 
+  knitr::kable(digits = 2)
+```
+
+### Table S9 - Threshold {.tabset .tabset-fade .tabset-pills -} 
+
+**Table S9.** Predicted 50% and 90% survival threshold by species presented as zoospore equivalent (ZE) and the natural logarithm of ZE (ln ZE + 1).
+
+```{r tableS9, echo = FALSE}
+# Extract marginal effects
+surv_marg_eff <- as.data.frame(ggeffects::ggpredict(surv_model, terms = c("lnBd[sample = 400]", "species_OTL")))
+surv_marg_eff <- surv_marg_eff %>%
+  dplyr::mutate(species    = surv_dat$species[match(group, surv_dat$species_OTL)],
+                family     = surv_dat$family[match(group, surv_dat$species_OTL)],
+                life_stage = surv_dat$life_stage[match(group, surv_dat$species_OTL)])
+
+# Predict 50% infliction point
+inflict_est <- data.frame(surv_marg_eff %>%
+                            dplyr::group_by(group, family) %>% 
+                            dplyr::filter(predicted < 0.52 & predicted > 0.48) %>% 
+                            dplyr::summarise(threshold = mean(x)) %>%
+                            dplyr::mutate(bd = exp(threshold))) %>%
+  dplyr::rename("Species" = group,
+                "Family"  = family,
+                "50% (ln ZE + 1)" = threshold,
+                "50% (ZE + 1)" = bd)
+
+inflict_90_est <- data.frame(surv_marg_eff %>%
+                               dplyr::group_by(group, family) %>% 
+                               dplyr::filter(predicted < 0.12 & predicted > 0.08) %>% 
+                               dplyr::summarise(threshold = mean(x)) %>%
+                               dplyr::mutate(bd = exp(threshold))) %>%
+  dplyr::rename("Species" = group,
+                "Family"  = family,
+                "90% (ln ZE + 1)" = threshold,
+                "90% (ZE + 1)" = bd)
+
+merge(inflict_est, inflict_90_est, by = c("Species", "Family")) %>%
+  format_cells(1:28, 1, "italics") %>%
+  tibble::add_row(Species = "") %>%
+  tibble::add_row(Species = "**Average**",
+                  "50% (ln ZE + 1)" = mean(inflict_est$"50% (ln ZE + 1)"),
+                  "50% (ZE + 1)"    = mean(inflict_est$"50% (ZE + 1)"),
+                  "90% (ln ZE + 1)" = mean(inflict_90_est$"90% (ln ZE + 1)"),
+                  "90% (ZE + 1)"    = mean(inflict_90_est$"90% (ZE + 1)")) %>%
+  knitr::kable(digits = 2)
+```
+
+### Table S10 - *Bd*-time model {.tabset .tabset-fade .tabset-pills -} 
+
+**Table S10.** Mean parameter estimates, estimate error, and 95% Bayesian credible intervals for the *Bd*-time model, which includes the natural logarithm of days post-exposure (lnTime), life stage, resistance, the inverse of temperature and the interaction of lnTime and life stage as fixed effects. Group-level effects include the species-study interaction ($\sigma_{species:study}^2$).
+
+```{r tableS10, echo = FALSE}
+# Fixed effect
+fef <- brms::fixef(time_bd_model) %>% 
+  as.data.frame(.) %>%
+  tibble::rownames_to_column("Parameter") %>% 
+  dplyr::mutate(Parameter = str_replace(Parameter, "M", "-")) %>% 
+  dplyr::mutate(Parameter = case_when(
+    Parameter == "Intercept" ~ "$\\beta_0$",
+    Parameter == "lnTime"  ~ "lnTime",
+    Parameter == "life_stageJuvenile"  ~ "Life stage - Juvenile",
+    Parameter == "lnDose"  ~ "lnDose",
+    Parameter == "inv_temp"  ~ "Inverse temperature",
+    Parameter == "lnTime:life_stageJuvenile"  ~ "lnTime : Life stage")) %>% 
+  tibble::add_row(Parameter = "**Fixed effects**", .before = 1)
+
+# Random effect
+ref <- summary(time_bd_model)$random %>% 
+  bind_rows() %>% # unlist
+  tibble::rownames_to_column("Parameter") %>% 
+  dplyr::select(1:5) %>% 
+  dplyr::mutate(Parameter = c("$\\sigma_{species:study}^2$")) %>%   
+  dplyr::rename(Q2.5  = 4, 
+                Q97.5 = 5) %>% 
+  tibble::add_row(Parameter = "**Group-level effects**", .before = 1)
+
+# Render table
+bind_rows(fef, ref) %>% 
+  remove_rownames() %>% 
+  knitr::kable(digits = 2)
+```
+
+***
+
+# Figures for main text {-}
+
+Figures produced here were modified in [Adobe Illustrator](https://www.adobe.com/au/products/illustrator.html) for publication.
+
+## Figure 2 - Trait model {-}
+
+```{r Fig 2, fig.align='center', fig.height=6, fig.width=4.5}
+# Extract marginal effects from model
+model_me      <- brms::conditional_effects(trait_model, c("trait", "life_stage"))
+trait_me      <- as.data.frame(model_me[[1]]) %>% dplyr::rename(estimate = estimate__, ci.lb = lower__, ci.ub = upper__)
+
+# Plot model output
+trait_me %>% 
+  ggplot(aes(x = trait, y = estimate)) +
+  geom_hline(yintercept = 0, linetype = "dashed", alpha = 0.5) +
+  ggforce::geom_sina(data = es_all_dat, aes(x = trait, y = Zr, size = Zr_inv), colour = "#cfcfcf") +
+  geom_point(aes(colour = trait), size = 4, show.legend = FALSE) +
+  geom_errorbar(aes(ymin = ci.lb, ymax = ci.ub, colour = trait), size = 0.8, width = 0.1, show.legend = FALSE) +
+  colorspace::scale_colour_discrete_sequential(palette = "RedOr", nmax = 14, order = 4:14) +
+  xlab(NULL) + ylab(expression("Effect size"~(italic(Z)[r]))) +
+  coord_flip() +
+  mytheme() + theme(legend.position = "bottom")
+```
+
+**Fig. 2.** Effect of *Bd* infection on all biological (cardiovascular, immune, hormone level, energy metabolism, osmoregulation, skin integrity) and functional (behaviour, body condition, locomotor capacity, reproduction, thermoregulation) traits measured. Only traits with more than five effect size were analysed. Numbers on the right side of the plot indicate the number of effect sizes analysed. Effect sizes (Zr) presented as estimates ± 95% CI. Grey points represent individual effect size, and the size of each point indicates study precision (inverse of standard error). 
+
+## Figure 3 - Sensitivity model {-}
+
+```{r Fig 3, fig.align='center', fig.height=5, fig.width=4.5}
+# Extract marginal effects
+sensitive_me <- brms::conditional_effects(sensitive_model)
+sensitive_me <- as.data.frame(sensitive_me[[1]]) %>% 
+  dplyr::rename(estimate = estimate__, ci.lb = lower__, ci.ub = upper__) %>%
+  dplyr::mutate(estimate = exp(estimate),
+                ci.lb    = exp(ci.lb),
+                ci.ub    = exp(ci.ub))
+
+sensitive_post <- brms::posterior_samples(sensitive_model) %>%
+  dplyr::sample_n(4000) %>%
+  dplyr::select(b_traitBehaviour:b_traitSkinintegrity) %>%
+  reshape2::melt(value.name = "sample")
+  
+sensitive_post$variable <- substring(sensitive_post$variable, 8)
+source("https://raw.githubusercontent.com/datavizpyr/data/master/half_flat_violinplot.R")
+
+sensitive_post %>%
+  dplyr::group_by(variable) %>%
+  dplyr::summarise(mean = mean(sample)) %>%
+  dplyr::mutate(variable = forcats::fct_reorder(variable, mean)) %>%
+  ggplot() +
+  geom_point(aes(x = variable, y = mean), size = 2) +
+  geom_flat_violin(data = sensitive_post, aes(x = variable, y = sample, fill = variable), colour = NA, show.legend = FALSE) +
+  geom_point(aes(x = variable, y = mean), size = 3) +
+  geom_point(aes(x = variable, y = mean, colour = variable), size = 2, show.legend = FALSE) +
+  colorspace::scale_fill_discrete_sequential(palette = "RedOr", nmax = 12, order = 4:12) +
+  colorspace::scale_colour_discrete_sequential(palette = "RedOr", nmax = 12, order = 4:12) +
+  xlab(NULL) +
+  ylab("Infection intensity (log ZE + 1)") +
+  coord_flip() +
+  mytheme()
+```
+
+**Fig. 3.** Posterior distribution density (4,000 subset iterations) of the minimum *Bd* load (ln ZE +1) to change trait response above or below the normal response range (5th or 95th quantile). Enclosed circles represent the mean estimate response. 
+
+## Figure 4 - Survival model {-}
+
+```{r Fig 4, fig.align='center', fig.height=5, fig.width=7}
+# Plot
+surv_plot <- surv_marg_eff %>%
+  ggplot(aes(x = x, y = predicted, colour = life_stage)) +
+  geom_vline(xintercept = log(1e4), linetype = "dashed", alpha = 0.5) +
+  geom_line(aes(group = group, linetype = life_stage), size = 0.5) +
+  geom_point(data = surv_dat, aes(x = lnBd, y = alive, colour = life_stage), size = 1.5, alpha = 0.5) +
+  colorspace::scale_colour_discrete_sequential(palette = "Blues 3", nmax = 5, order = c(3,5)) +
+  ylab("Survival probabilty") +
+  xlab("Infection intensity (ln ZE + 1)") +
+  mytheme() + theme(legend.position = "top") +
+  facet_grid(rows = vars(life_stage))
+
+inflict_plot <- data.frame(surv_marg_eff %>% 
+                            dplyr::group_by(group, life_stage) %>% 
+                            dplyr::filter(predicted < 0.52 & predicted > 0.48) %>% 
+                            dplyr::summarise(threshold = mean(x)) %>%
+                            dplyr::mutate(bd = exp(threshold))) %>%
+  dplyr::mutate(group = forcats::fct_reorder(group, -threshold)) %>%
+  ggplot(aes(x = group, y = threshold, colour = life_stage)) +
+  geom_point(aes(shape = life_stage), size = 2) +
+  colorspace::scale_colour_discrete_sequential(palette = "Blues 3", nmax = 5, order = c(3,5)) +
+  ylab(expression(atop(italic("Bd")~"load (ln ZE + 1)", "with 50% mortality probabilty"))) +
+  xlab(NULL) +
+  scale_x_discrete(position = "top") +
+  coord_flip() +
+  mytheme() + theme(legend.position = "top", axis.text.y = element_text(size = rel(0.8)))
+
+cowplot::plot_grid(surv_plot, inflict_plot, 
+                   labels = c('a', 'b'), 
+                   ncol = 2, 
+                   align = "h", 
+                   axis = "tb",
+                   rel_widths = c(0.9, 1))
+```
+
+**Fig. 4.** Relationship between infection intensity (ln ZE + 1) and the probability of survival of 27 species. **(a)** Species-specific survival probability were grouped either as adult or juveniles. Solid lines represent adult frogs and dashed lines represent juvenile frogs. Dashed vertical line represents the Vredenburg’s “10,000 zoospore rule” (Kinney et al., 2011). **(b)** The predicted inflection points for probability of infection that causes 50% mortality. Circles represent adults and triangles represent juveniles.
+
+## Figure 5 - *Bd*-time dependent mortality model {-}
+
+```{r Fig 5, fig.align='center', fig.height=3, fig.width=7}
+# Extract marginal effects
+time_marg_eff <- as.data.frame(ggeffects::ggpredict(time_bd_model, terms = c("lnTime[sample = 50]", "life_stage")))
+
+# Create matrix of min and max values per group
+time_range <- surv_dat %>%
+  dplyr::filter(alive == 0) %>%
+  dplyr::group_by(life_stage) %>%
+  dplyr::summarise(min = min(lnTime[!is.na(lnTime)]),
+                   max = max(lnTime[!is.na(lnTime)])) %>%
+  as.data.frame()
+
+# Add min and max values to model df and keep predictions within data range
+time_marg_eff$min <- time_range$min[match(time_marg_eff$group, time_range$life_stage)]
+time_marg_eff$max <- time_range$max[match(time_marg_eff$group, time_range$life_stage)]
+time_marg_eff     <- time_marg_eff %>% 
+  dplyr::group_by(group) %>%
+  dplyr::filter(x >= min & x < max) %>%
+  dplyr::mutate(life_stage = group,
+                days       = exp(x),
+                Bd         = exp(predicted))
+
+# Plot 
+time_bd_plot <- ggplot(data = time_marg_eff, aes(x = x, y = predicted, group = life_stage)) +
+  geom_point(data = surv_dat %>% dplyr::filter(alive == 0), aes(x = lnTime, y = lnBd, colour = life_stage, shape = life_stage), size = 2, alpha = 0.4) +
+  geom_ribbon(aes(x = x, ymin = conf.low, ymax = conf.high, fill = life_stage), alpha = 0.1, show.legend = FALSE) +
+  geom_line(aes(colour = life_stage, linetype = life_stage), size = 1) +
+  colorspace::scale_colour_discrete_sequential(palette = "Blues 3", nmax = 5, order = c(3,5)) +
+  colorspace::scale_fill_discrete_sequential(palette = "Blues 3", nmax = 5, order = c(3,5)) +
+  ylab("Infection intensity (ln ZE + 1)") +
+  xlab("Time post exposure (ln days)") +
+  mytheme() +
+  theme(legend.position = "top")
+
+time_plot <- surv_dat %>% dplyr::filter(alive == 0) %>% 
+  ggplot(aes(x = life_stage, y = lnTime)) +
+  geom_flat_violin(aes(fill = life_stage), colour = NA, alpha = 0.5, show.legend = FALSE) +
+  geom_point(aes(shape = life_stage, colour = life_stage), size = 1.5) +
+  colorspace::scale_colour_discrete_sequential(palette = "Blues 3", nmax = 5, order = c(3,5)) +
+  colorspace::scale_fill_discrete_sequential(palette = "Blues 3", nmax = 5, order = c(3,5)) +
+  ylab("Time post exposure (ln days)") + xlab(NULL) +
+  mytheme() +
+  theme(legend.position = "top")
+
+cowplot::plot_grid(time_bd_plot, time_plot, 
+                   labels = c('a', 'b'), 
+                   ncol = 2, 
+                   align = "h", 
+                   axis = "bt",
+                   rel_widths = c(1, 0.5))
+```
+
+**Fig. 5. (a)** Relationship between days post exposure to *Bd* (ln days) and the infection intensity (ln ZE + 1) at death. Regression lines (solid = adults, dashed = juveniles) represent model estimates and shaded area represents 95% CI. **(b)** Difference in time to death post-exposure between juvenile and adults.
+
+# Supplmentary figures {-}
+
+## Fig S8 - *Bd*-time dependent mortality model {-}
+
+```{r Fig S8, fig.align='center', fig.height=9, fig.width=8}
+es_all_dat %>%
+  ggplot(aes(x = response, y = Zr, colour = trait)) +
+  geom_hline(yintercept = 0, linetype = "dashed", alpha = 0.5) +
+  geom_point(aes(shape = life_stage), show.legend = FALSE) +
+  viridis::scale_colour_viridis(discrete = TRUE) +
+  xlab(NULL) + ylab(expression("Effect size"~(italic(Z)[r]))) +
+  coord_flip() +
+  facet_wrap(~ trait, ncol = 3, scales = "free_y") +
+  mytheme() + theme(axis.text = element_text(size = 5),
+                    legend.position = "bottom")
+```
+
+**Fig. S8.** Effect of *Bd* infection on specific responses across different biological and functional traits. Data presented as individual effect sizes ($Z_r$). Circles represent adults and triangles represent juveniles. 
+
+***
+
+# References {-}
+
+<div id="refs"></div>
+<br>
+
+***
+
+## Session Information {-}
+
+```{r sessioninfo, echo = FALSE}
+pander::pander(sessionInfo(), locale = FALSE)
+```
